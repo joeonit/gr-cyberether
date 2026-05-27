@@ -1,6 +1,8 @@
 build/
 .cache/
 .conda/
+.zed/
+.editorconfig
 .DS_Store
 *.swp
 *.swo

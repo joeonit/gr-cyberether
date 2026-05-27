@@ -11,7 +11,8 @@
 ########################################################################
 include(GrPlatform) #define LIB_SUFFIX
 
-list(APPEND cyberether_sources)
+list(APPEND cyberether_sources
+    cyber_null_sink_impl.cc)
 
 set(cyberether_sources
     "${cyberether_sources}"
@@ -22,12 +23,17 @@ if(NOT cyberether_sources)
 endif(NOT cyberether_sources)
 
 add_library(gnuradio-cyberether SHARED ${cyberether_sources})
-target_link_libraries(gnuradio-cyberether gnuradio::gnuradio-runtime)
+target_compile_features(gnuradio-cyberether PUBLIC cxx_std_20)
+target_link_libraries(gnuradio-cyberether gnuradio::gnuradio-runtime PkgConfig::CYBERETHER)
+target_link_directories(gnuradio-cyberether PRIVATE ${CYBERETHER_LIBRARY_DIRS})
 target_include_directories(
     gnuradio-cyberether
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../include>
     PUBLIC $<INSTALL_INTERFACE:include>)
 set_target_properties(gnuradio-cyberether PROPERTIES DEFINE_SYMBOL "gnuradio_cyberether_EXPORTS")
+
+# Search CyberEther include dir BEFORE any system path.
+target_include_directories(gnuradio-cyberether BEFORE PRIVATE ${CYBERETHER_INCLUDE_DIRS})
 
 if(APPLE)
     set_target_properties(gnuradio-cyberether PROPERTIES INSTALL_NAME_DIR

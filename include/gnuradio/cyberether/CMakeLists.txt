@@ -9,4 +9,5 @@
 ########################################################################
 # Install public header files
 ########################################################################
-install(FILES api.h DESTINATION include/gnuradio/cyberether)
+install(FILES api.h
+    cyber_null_sink.h DESTINATION include/gnuradio/cyberether)

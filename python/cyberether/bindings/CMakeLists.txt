@@ -24,9 +24,12 @@ include(GrPybind)
 # Python Bindings
 ########################################################################
 
-list(APPEND cyberether_python_files python_bindings.cc)
+list(APPEND cyberether_python_files
+    cyber_null_sink_python.cc python_bindings.cc)
 
 gr_pybind_make_oot(cyberether ../../.. gr::cyberether "${cyberether_python_files}")
+target_compile_features(cyberether_python PRIVATE cxx_std_20)
+target_link_directories(cyberether_python PRIVATE ${CYBERETHER_LIBRARY_DIRS})
 
 # copy bindings extension for use in QA test module
 add_custom_command(
