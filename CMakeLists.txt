@@ -18,6 +18,8 @@ set(CMAKE_BUILD_TYPE
 ########################################################################
 cmake_minimum_required(VERSION 3.16)
 project(gr-cyberether CXX C)
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 enable_testing()
 
 # Install to PyBOMBS target prefix if defined
@@ -35,6 +37,19 @@ endif()
 list(INSERT CMAKE_MODULE_PATH 0 ${PROJECT_SOURCE_DIR}/cmake/Modules)
 # Find gnuradio to get access to the cmake modules
 find_package(Gnuradio "3.10" REQUIRED)
+
+# Find CyberEther (Jetstream)
+# Currently the build requires a minimum version of 1.4.0 during the development
+
+set(CYBERETHER_MIN_VERSION "1.4.0"
+    CACHE STRING "Minimum version required")
+
+find_package(PkgConfig REQUIRED)
+
+pkg_check_modules(CYBERETHER REQUIRED IMPORTED_TARGET GLOBAL
+    "jetstream>=${CYBERETHER_MIN_VERSION}")
+
+message(STATUS "Found CyberEther  ${CYBERETHER_VERSION}")
 
 # Set the version information here
 # cmake-format: off
