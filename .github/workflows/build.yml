@@ -1,0 +1,138 @@
+name: build
+
+# Dual-branch CI for gr-cyberether: build against both GNU Radio 3.10 and the
+# development (main) branch, linking the pinned CyberEther. Both matrix legs
+# must go green before a PR merges.
+#
+# It is still a source build: the release ships a linkable libjetstream
+# TODO(mentor): the latest release already ships a linkable libjetstream
+# but now only avalible for macos tarball and also doesn't include the header
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Cancel superseded runs on the same ref to save minutes.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # enforced by CYBERETHER_MIN_VERSION in CMakeLists.txt
+  CYBERETHER_REF: "v1.4.0"
+
+jobs:
+  cyberether:
+    name: CyberEther
+    runs-on: ubuntu-24.04
+    env:
+      CE_PREFIX: ${{ github.workspace }}/.ce-prefix
+    steps:
+      - name: Cache CyberEther
+        id: ce-cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.CE_PREFIX }}
+          key: cyberether-${{ env.CYBERETHER_REF }}-${{ runner.os }}-v1
+
+      # CyberEther's build dependencies
+      - name: Install build tooling
+        if: steps.ce-cache.outputs.cache-hit != 'true'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential git ninja-build python3-pip \
+            glslang-tools spirv-cross
+          pip3 install --break-system-packages "meson>=1.11" PyYAML numpy mapbox_earcut
+
+      - name: Build & install CyberEther
+        if: steps.ce-cache.outputs.cache-hit != 'true'
+        run: |
+          git clone --depth 1 --branch "$CYBERETHER_REF" \
+            https://github.com/luigifcruz/CyberEther.git ce-src
+          cd ce-src
+          meson setup build \
+            --prefix="$CE_PREFIX" \
+            --buildtype=release \
+            -Dpython=false -Dtests=false -Dexamples=false
+          meson compile -C build
+          meson install -C build
+
+  # Build gr-cyberether against each supported GNU Radio(main and 3.10), reusing the CyberEther
+  build:
+    name: GNU Radio ${{ matrix.gr-version }}
+    runs-on: ubuntu-24.04
+    needs: cyberether
+    strategy:
+      fail-fast: false
+      matrix:
+        gr-version: ["3.10", "main"]
+    env:
+      CE_PREFIX: ${{ github.workspace }}/.ce-prefix
+
+    steps:
+      - name: Checkout gr-cyberether
+        uses: actions/checkout@v4
+
+      - name: Install base tooling
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential cmake pkg-config git libboost-all-dev
+
+      # GNU Radio. 3.10 ships in apt on Ubuntu 24.04. main is not packaged, so
+      # build it from source (cached).
+      # TODO: Research a better option for GNU Radio main (nightly PPA, prebuilt image)
+      - name: Install GNU Radio 3.10 (apt)
+        if: matrix.gr-version == '3.10'
+        run: sudo apt-get install -y --no-install-recommends gnuradio-dev
+
+      - name: Cache GNU Radio main
+        if: matrix.gr-version == 'main'
+        id: gr-cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ github.workspace }}/.gr-prefix
+          key: gnuradio-main-${{ runner.os }}-v1
+
+      - name: Build GNU Radio main (source)
+        if: matrix.gr-version == 'main' && steps.gr-cache.outputs.cache-hit != 'true'
+        run: |
+          sudo apt-get install -y --no-install-recommends \
+            libvolk-dev libfftw3-dev libgsl-dev liblog4cpp5-dev libgmp-dev \
+            libsndfile1-dev libuhd-dev pybind11-dev python3-numpy \
+            libspdlog-dev python3-mako
+          git clone --depth 1 --branch main https://github.com/gnuradio/gnuradio.git
+          cmake -S gnuradio -B gnuradio/build \
+            -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}/.gr-prefix" \
+            -DENABLE_GR_BLOCKS=ON -DENABLE_TESTING=OFF -DENABLE_DOXYGEN=OFF
+          cmake --build gnuradio/build -j"$(nproc)"
+          cmake --install gnuradio/build
+
+      - name: Export GNU Radio main to PATH
+        if: matrix.gr-version == 'main'
+        run: |
+          echo "${{ github.workspace }}/.gr-prefix/bin" >> "$GITHUB_PATH"
+          echo "CMAKE_PREFIX_PATH=${{ github.workspace }}/.gr-prefix:$CMAKE_PREFIX_PATH" >> "$GITHUB_ENV"
+
+      # Restore-only: the `cyberether` job (a prerequisite via `needs:`)
+      - name: Restore CyberEther
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ env.CE_PREFIX }}
+          key: cyberether-${{ env.CYBERETHER_REF }}-${{ runner.os }}-v1
+          fail-on-cache-miss: true
+
+      - name: Export CyberEther to pkg-config
+        run: |
+          echo "PKG_CONFIG_PATH=$CE_PREFIX/lib/pkgconfig:$CE_PREFIX/lib/x86_64-linux-gnu/pkgconfig:$PKG_CONFIG_PATH" >> "$GITHUB_ENV"
+
+      - name: Configure
+        run: cmake -B build -DENABLE_PYTHON=ON -DENABLE_DOXYGEN=OFF
+
+      - name: Build
+        run: cmake --build build -j"$(nproc)"
+
+      - name: Confirm the pinned version was found
+        run: pkg-config --modversion jetstream
