@@ -32,8 +32,21 @@ namespace gr {
        * class. cyberether::cyber_lineplot_sink::make is the public interface for
        * creating new instances.
        */
-      static sptr make();
+      static sptr make(size_t buffer_size = 4096,
+                       const std::string& name = "lineplot");
     };
+
+
+    /*!
+     * \brief Opens the window. Must run on the main thread.
+     */
+    virtual void present() = 0;
+
+    /*!
+     * \brief Whether the window is currently open.
+     *        Wraps Superluminal::Presenting().
+     */
+    virtual bool is_presenting() = 0;
 
   } // namespace cyberether
 } // namespace gr
