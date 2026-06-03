@@ -12,7 +12,8 @@
 include(GrPlatform) #define LIB_SUFFIX
 
 list(APPEND cyberether_sources
-    cyber_null_sink_impl.cc)
+    cyber_null_sink_impl.cc
+    cyber_lineplot_sink_impl.cc)
 
 set(cyberether_sources
     "${cyberether_sources}"
@@ -60,7 +61,9 @@ include(GrTest)
 # If your unit tests require special include paths, add them here
 #include_directories()
 # List all files that contain Boost.UTF unit tests here
-list(APPEND test_cyberether_sources)
+
+list(APPEND test_cyberether_sources
+)
 # Anything we need to link to for the unit tests go here
 list(APPEND GR_TEST_TARGET_DEPS gnuradio-cyberether)
 

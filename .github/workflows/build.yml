@@ -88,6 +88,17 @@ jobs:
         if: matrix.gr-version == '3.10'
         run: sudo apt-get install -y --no-install-recommends gnuradio-dev
 
+      # GNU Radio main's installed CMake package still calls find_dependency()
+      # for its system dependencies. Install them even when .gr-prefix is
+      # restored from cache, otherwise configure can fail on packages like spdlog.
+      - name: Install GNU Radio main dependencies
+        if: matrix.gr-version == 'main'
+        run: |
+          sudo apt-get install -y --no-install-recommends \
+            libvolk-dev libfftw3-dev libgsl-dev liblog4cpp5-dev libgmp-dev \
+            libsndfile1-dev libuhd-dev pybind11-dev python3-numpy \
+            libspdlog-dev libfmt-dev python3-mako
+
       - name: Cache GNU Radio main
         if: matrix.gr-version == 'main'
         id: gr-cache
@@ -99,10 +110,6 @@ jobs:
       - name: Build GNU Radio main (source)
         if: matrix.gr-version == 'main' && steps.gr-cache.outputs.cache-hit != 'true'
         run: |
-          sudo apt-get install -y --no-install-recommends \
-            libvolk-dev libfftw3-dev libgsl-dev liblog4cpp5-dev libgmp-dev \
-            libsndfile1-dev libuhd-dev pybind11-dev python3-numpy \
-            libspdlog-dev python3-mako
           git clone --depth 1 --branch main https://github.com/gnuradio/gnuradio.git
           cmake -S gnuradio -B gnuradio/build \
             -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}/.gr-prefix" \

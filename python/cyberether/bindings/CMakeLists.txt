@@ -25,7 +25,8 @@ include(GrPybind)
 ########################################################################
 
 list(APPEND cyberether_python_files
-    cyber_null_sink_python.cc python_bindings.cc)
+    cyber_null_sink_python.cc
+    cyber_lineplot_sink_python.cc python_bindings.cc)
 
 gr_pybind_make_oot(cyberether ../../.. gr::cyberether "${cyberether_python_files}")
 target_compile_features(cyberether_python PRIVATE cxx_std_20)
