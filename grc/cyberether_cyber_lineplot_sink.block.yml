@@ -1,10 +1,10 @@
 id: cyberether_cyber_lineplot_sink
-label: cyber_lineplot_sink
+label: CyberEther Line Plot Sink
 category: '[cyberether]'
 
 templates:
   imports: from gnuradio import cyberether
-  make: cyberether.cyber_lineplot_sink()
+  make: cyberether.cyber_lineplot_sink(${buffer_size}, ${name})
 
 #  Make one 'parameters' list entry for every parameter you want settable from the GUI.
 #     Keys include:
@@ -13,13 +13,14 @@ templates:
 #     * dtype (e.g. int, float, complex, byte, short, xxx_vector, ...)
 #     * default
 parameters:
-- id: parametername_replace_me
-  label: FIX ME
+- id: name
+  label: Plot Name
   dtype: string
-  default: You need to fill in your grc/cyberether_cyber_lineplot_sink.block.yaml
-#- id: ...
-#  label: ...
-#  dtype: ...
+  default: '"lineplot"'
+- id: buffer_size
+  label: Buffer Size
+  dtype: int
+  default: '4096'
 
 #  Make one 'inputs' list entry per input and one 'outputs' list entry per output.
 #  Keys include:
@@ -29,18 +30,9 @@ parameters:
 #      * vlen (optional - data stream vector length. Default is 1)
 #      * optional (optional - set to 1 for optional inputs. Default is 0)
 inputs:
-#- label: ...
-#  domain: ...
-#  dtype: ...
-#  vlen: ...
-#  optional: ...
-
-outputs:
-#- label: ...
-#  domain: ...
-#  dtype: ...
-#  vlen: ...
-#  optional: ...
+- label: in
+  domain: stream
+  dtype: complex
 
 #  'file_format' specifies the version of the GRC yml format used in the file
 #  and should usually not be changed.

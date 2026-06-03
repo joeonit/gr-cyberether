@@ -19,9 +19,12 @@
  static const char *__doc_gr_cyberether_cyber_lineplot_sink = R"doc()doc";
 
 
- static const char *__doc_gr_cyberether_cyber_lineplot_sink_cyber_lineplot_sink_0 = R"doc()doc";
-
-
  static const char *__doc_gr_cyberether_cyber_lineplot_sink_make = R"doc()doc";
 
-  
+
+ static const char *__doc_gr_cyberether_cyber_lineplot_sink_present = R"doc()doc";
+
+
+ static const char *__doc_gr_cyberether_cyber_lineplot_sink_is_presenting = R"doc()doc";
+
+

@@ -15,9 +15,11 @@ namespace gr {
   namespace cyberether {
 
     /*!
-     * \brief <+description of block+>
+     * \brief Time-domain line plot sink.
      * \ingroup cyberether
      *
+     * Buffers incoming complex samples into a ring buffer that is displayed
+     * as a real-valued time-domain line. The window is opened by present().
      */
     class CYBERETHER_API cyber_lineplot_sink : virtual public gr::sync_block
     {
@@ -34,19 +36,19 @@ namespace gr {
        */
       static sptr make(size_t buffer_size = 4096,
                        const std::string& name = "lineplot");
+
+      /*!
+       * \brief Opens the window and runs the render loop. Must run on the
+       *        main thread and blocks until the window is closed.
+       */
+      virtual void present() = 0;
+
+      /*!
+       * \brief Whether the window is currently open.
+       *        Wraps Superluminal::Presenting().
+       */
+      virtual bool is_presenting() = 0;
     };
-
-
-    /*!
-     * \brief Opens the window. Must run on the main thread.
-     */
-    virtual void present() = 0;
-
-    /*!
-     * \brief Whether the window is currently open.
-     *        Wraps Superluminal::Presenting().
-     */
-    virtual bool is_presenting() = 0;
 
   } // namespace cyberether
 } // namespace gr

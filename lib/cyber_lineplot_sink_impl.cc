@@ -33,29 +33,15 @@ namespace gr {
       d_buffer_size(buffer_size),
       d_name(name),
       d_write_ptr(0),
+      d_initialized(false),
       d_tensor(DeviceType::CPU, TypeToDataType<CF32>(),
                {1, static_cast<U64>(buffer_size)})
-    {}
-
-    // registers the plot, window is not created until present()->Show()
-    // calls Superluminal::Start() on the main thread.
-    const auto layout = Superluminal::MosaicLayout(1, 1, 1, 1, 0, 0);
-
-    const Result res = Superluminal::Plot(d_name, layout, {
-        .buffer    = d_tensor,
-        .type      = Superluminal::Type::Line,
-        .source    = Superluminal::Domain::Time,
-        .display   = Superluminal::Domain::Time,
-        .operation = Superluminal::Operation::Real,
-    });
-
-    if (res != Result::SUCCESS) {
-        throw std::runtime_error("cyber_lineplot_sink_c: Superluminal::Plot failed");
+    {
+      // Construction only allocates the display buffer. The Superluminal
+      // instance and plot are set up lazily in present() on the main thread.
+      JST_INFO("[gr-cyberether] cyber_lineplot_sink '{}' constructed: {} samples, time-domain view.",
+               d_name, d_buffer_size);
     }
-
-    JST_INFO("[gr-cyberether] cyber_lineplot_sink_c '{}' ready: {} samples, time-domain view.",
-             d_name, d_buffer_size);
-  }
 
 
     /*
@@ -66,33 +52,55 @@ namespace gr {
     }
 
     void
-    cyber_lineplot_sink_c_impl::present()
+    cyber_lineplot_sink_impl::present()
     {
-      // Creates the window and runs the event loop. Must be the application main thread.
-      // Superluminal::Show() internally drives Update(), so work() never touches the render path
+      // Must run on the main thread. Sets up the instance and registers the plot
+      // on first call, then runs the render loop until the window is closed.
+      // Show() drives Update() and tears the instance down on exit.
+      if (!d_initialized) {
+          if (Superluminal::Initialize() != Result::SUCCESS) {
+              throw std::runtime_error("cyber_lineplot_sink: Superluminal::Initialize failed");
+          }
+
+          const auto layout = Superluminal::MosaicLayout(1, 1, 1, 1, 0, 0);
+
+          const Result res = Superluminal::Plot(d_name, layout, {
+              .buffer    = d_tensor,
+              .type      = Superluminal::Type::Line,
+              .source    = Superluminal::Domain::Time,
+              .display   = Superluminal::Domain::Time,
+              .operation = Superluminal::Operation::Real,
+          });
+
+          if (res != Result::SUCCESS) {
+              throw std::runtime_error("cyber_lineplot_sink: Superluminal::Plot failed");
+          }
+
+          d_initialized = true;
+      }
+
       Superluminal::Show();
     }
 
     bool
-    cyber_lineplot_sink_c_impl::is_presenting()
+    cyber_lineplot_sink_impl::is_presenting()
     {
-      return Superluminal::Presenting();
+      return d_initialized && Superluminal::Presenting();
     }
 
     int
-    cyber_lineplot_sink_c_impl::work(int noutput_items,
+    cyber_lineplot_sink_impl::work(int noutput_items,
         gr_vector_const_void_star& input_items,
         gr_vector_void_star& output_items)
     {
       const input_type* in = static_cast<const input_type*>(input_items[0]);
 
-      // Ring buffers
+      // Ring buffer: keep the most recent d_buffer_size samples in the display tensor.
       CF32* buf = d_tensor.data<CF32>();
       for (int i = 0; i < noutput_items; ++i) {
           buf[d_write_ptr] = in[i];
           d_write_ptr = (d_write_ptr + 1) % d_buffer_size;
       }
-
 
       return noutput_items;
     }
