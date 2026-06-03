@@ -35,6 +35,12 @@ endif()
 
 # Make sure our local CMake Modules path comes first
 list(INSERT CMAKE_MODULE_PATH 0 ${PROJECT_SOURCE_DIR}/cmake/Modules)
+# GNU Radio 3.10 still uses CMake's FindBoost through its package config.
+# Keep that behavior with newer CMake versions where CMP0167 defaults to NEW.
+if(POLICY CMP0167)
+    cmake_policy(SET CMP0167 OLD)
+endif()
+set(Boost_NO_BOOST_CMAKE ON CACHE BOOL "Use CMake's FindBoost module")
 # Find gnuradio to get access to the cmake modules
 find_package(Gnuradio "3.10" REQUIRED)
 
@@ -50,8 +56,6 @@ pkg_check_modules(CYBERETHER REQUIRED IMPORTED_TARGET GLOBAL
     "jetstream>=${CYBERETHER_MIN_VERSION}")
 
 message(STATUS "Found CyberEther  ${CYBERETHER_VERSION}")
-
-
 
 # Set the version information here
 # cmake-format: off

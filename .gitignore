@@ -2,8 +2,11 @@ build/
 .cache/
 .conda/
 .zed/
+.idea/
+__pycache__/
 .editorconfig
 .DS_Store
+*.py[cod]
 *.swp
 *.swo
 *.o
