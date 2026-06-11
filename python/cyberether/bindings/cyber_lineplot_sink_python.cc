@@ -42,15 +42,5 @@ void bind_cyber_lineplot_sink(py::module& m)
            D(cyber_lineplot_sink,make)
         )
 
-
-        .def("present", &cyber_lineplot_sink::present,
-           D(cyber_lineplot_sink,present)
-        )
-
-
-        .def("is_presenting", &cyber_lineplot_sink::is_presenting,
-           D(cyber_lineplot_sink,is_presenting)
-        )
-
         ;
 }

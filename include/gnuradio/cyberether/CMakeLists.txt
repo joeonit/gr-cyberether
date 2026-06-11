@@ -11,4 +11,5 @@
 ########################################################################
 install(FILES api.h
     cyber_null_sink.h
-    cyber_lineplot_sink.h DESTINATION include/gnuradio/cyberether)
+    cyber_lineplot_sink.h
+    cyber_context.h DESTINATION include/gnuradio/cyberether)

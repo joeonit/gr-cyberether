@@ -36,18 +36,6 @@ namespace gr {
        */
       static sptr make(size_t buffer_size = 4096,
                        const std::string& name = "lineplot");
-
-      /*!
-       * \brief Opens the window and runs the render loop. Must run on the
-       *        main thread and blocks until the window is closed.
-       */
-      virtual void present() = 0;
-
-      /*!
-       * \brief Whether the window is currently open.
-       *        Wraps Superluminal::Presenting().
-       */
-      virtual bool is_presenting() = 0;
     };
 
   } // namespace cyberether
