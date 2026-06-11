@@ -8,6 +8,10 @@
 #include <gnuradio/io_signature.h>
 #include "cyber_lineplot_sink_impl.h"
 #include <jetstream/logger.hh>
+#include <atomic>
+#include <chrono>
+#include <stdexcept>
+#include <thread>
 
 namespace gr {
   namespace cyberether {
@@ -30,12 +34,14 @@ namespace gr {
       : gr::sync_block("cyber_lineplot_sink",
               gr::io_signature::make(1 , 1 , sizeof(input_type)),
               gr::io_signature::make(0, 0, 0)),
-      d_buffer_size(buffer_size),
+      d_buffer_size(buffer_size == 0 ? 1 : buffer_size),
       d_name(name),
-      d_write_ptr(0),
+      d_display_write_ptr(0),
       d_initialized(false),
+      d_ring(d_buffer_size),
+      d_ring_scratch(d_buffer_size),
       d_tensor(DeviceType::CPU, TypeToDataType<CF32>(),
-               {1, static_cast<U64>(buffer_size)})
+               {1, static_cast<U64>(d_buffer_size)})
     {
       // Construction only allocates the display buffer. The Superluminal
       // instance and plot are set up lazily in present() on the main thread.
@@ -52,11 +58,22 @@ namespace gr {
     }
 
     void
+    cyber_lineplot_sink_impl::drain_ring_to_tensor()
+    {
+      const size_t samples_read = d_ring.pop(d_ring_scratch.data(), d_ring_scratch.size());
+      CF32* display = d_tensor.data<CF32>();
+
+      for (size_t i = 0; i < samples_read; ++i) {
+          display[d_display_write_ptr] = d_ring_scratch[i];
+          d_display_write_ptr = (d_display_write_ptr + 1) % d_buffer_size;
+      }
+    }
+
+    void
     cyber_lineplot_sink_impl::present()
     {
       // Must run on the main thread. Sets up the instance and registers the plot
       // on first call, then runs the render loop until the window is closed.
-      // Show() drives Update() and tears the instance down on exit.
       if (!d_initialized) {
           if (Superluminal::Initialize() != Result::SUCCESS) {
               throw std::runtime_error("cyber_lineplot_sink: Superluminal::Initialize failed");
@@ -79,7 +96,44 @@ namespace gr {
           d_initialized = true;
       }
 
-      Superluminal::Show();
+      drain_ring_to_tensor();
+
+      if (Superluminal::Start() != Result::SUCCESS) {
+          throw std::runtime_error("cyber_lineplot_sink: Superluminal::Start failed");
+      }
+
+      std::atomic<bool> running = true;
+      auto update_thread = std::thread([this, &running]() {
+          while (running.load(std::memory_order_acquire) && Superluminal::Presenting()) {
+              drain_ring_to_tensor();
+              if (Superluminal::Update() != Result::SUCCESS) {
+                  running.store(false, std::memory_order_release);
+                  break;
+              }
+              std::this_thread::sleep_for(std::chrono::milliseconds(16));
+          }
+      });
+
+      const Result block_result = Superluminal::Block();
+
+      running.store(false, std::memory_order_release);
+      if (update_thread.joinable()) {
+          update_thread.join();
+      }
+
+      const Result stop_result = Superluminal::Stop();
+      const Result terminate_result = Superluminal::Terminate();
+      d_initialized = false;
+
+      if (block_result != Result::SUCCESS) {
+          throw std::runtime_error("cyber_lineplot_sink: Superluminal::Block failed");
+      }
+      if (stop_result != Result::SUCCESS) {
+          throw std::runtime_error("cyber_lineplot_sink: Superluminal::Stop failed");
+      }
+      if (terminate_result != Result::SUCCESS) {
+          throw std::runtime_error("cyber_lineplot_sink: Superluminal::Terminate failed");
+      }
     }
 
     bool
@@ -93,14 +147,23 @@ namespace gr {
         gr_vector_const_void_star& input_items,
         gr_vector_void_star& output_items)
     {
-      const input_type* in = static_cast<const input_type*>(input_items[0]);
-
-      // Ring buffer: keep the most recent d_buffer_size samples in the display tensor.
-      CF32* buf = d_tensor.data<CF32>();
-      for (int i = 0; i < noutput_items; ++i) {
-          buf[d_write_ptr] = in[i];
-          d_write_ptr = (d_write_ptr + 1) % d_buffer_size;
+      if (noutput_items <= 0) {
+          return 0;
       }
+
+      const input_type* in = static_cast<const input_type*>(input_items[0]);
+      size_t samples_to_push = static_cast<size_t>(noutput_items);
+
+      // For visualization, keep the newest samples if GNU Radio hands us a chunk
+      // larger than the queue. If the consumer falls behind, push() drops the
+      // overflow by returning fewer items, but the sink still consumes all input
+      // so it does not back-pressure the flowgraph.
+      if (samples_to_push > d_buffer_size) {
+          in += samples_to_push - d_buffer_size;
+          samples_to_push = d_buffer_size;
+      }
+
+      d_ring.push(in, samples_to_push);
 
       return noutput_items;
     }
