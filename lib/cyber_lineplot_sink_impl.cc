@@ -7,9 +7,8 @@
 
 #include <gnuradio/io_signature.h>
 #include "cyber_lineplot_sink_impl.h"
+#include <gnuradio/cyberether/cyber_context.h>
 #include <jetstream/logger.hh>
-#include <chrono>
-#include <stdexcept>
 
 namespace gr {
   namespace cyberether {
@@ -30,11 +29,8 @@ namespace gr {
       d_buffer_size(buffer_size == 0 ? 1 : buffer_size),
       d_name(name),
       d_display_write_ptr(0),
-      d_ring(d_buffer_size),
-      d_ring_scratch(d_buffer_size),
       d_tensor(DeviceType::CPU, TypeToDataType<CF32>(),
-               {1, static_cast<U64>(d_buffer_size)}),
-      d_stop_ticker(false)
+               {1, static_cast<U64>(d_buffer_size)})
     {
       JST_INFO("[gr-cyberether] cyber_lineplot_sink '{}' constructed: {} samples.",
                d_name, d_buffer_size);
@@ -42,52 +38,25 @@ namespace gr {
 
     cyber_lineplot_sink_impl::~cyber_lineplot_sink_impl()
     {
-      d_stop_ticker.store(true, std::memory_order_release);
-      if (d_ticker.joinable()) {
-          d_ticker.join();
-      }
-    }
-
-    void
-    cyber_lineplot_sink_impl::drain_ring_to_tensor()
-    {
-      const size_t samples_read = d_ring.pop(d_ring_scratch.data(), d_ring_scratch.size());
-      CF32* display = d_tensor.data<CF32>();
-
-      for (size_t i = 0; i < samples_read; ++i) {
-          display[d_display_write_ptr] = d_ring_scratch[i];
-          d_display_write_ptr = (d_display_write_ptr + 1) % d_buffer_size;
-      }
+      cyber_context::instance().unregister_plot(this);
     }
 
     bool
     cyber_lineplot_sink_impl::start()
     {
-      // Requires a cyber_context to have been constructed first (which calls
-      // Superluminal::Initialize). Plot() registers this sink with the
-      // singleton; the ticker drives ring -> tensor + Superluminal::Update().
-      const auto layout = Superluminal::MosaicLayout(1, 1, 1, 1, 0, 0);
-      const Result res = Superluminal::Plot(d_name, layout, {
+      // Register this sink's plot with the shared context. We deliberately do
+      // NOT call Superluminal::Plot() here: the grid layout can only be decided
+      // once every sink is known, so the actual Plot() (with this sink's grid
+      // cell) is issued later by cyber_context::present() on the main thread.
+      // This is what lets multiple sinks tile instead of overlapping.
+      const Superluminal::PlotConfig config = {
           .buffer    = d_tensor,
           .type      = Superluminal::Type::Line,
           .source    = Superluminal::Domain::Time,
           .display   = Superluminal::Domain::Time,
           .operation = Superluminal::Operation::Real,
-      });
-      if (res != Result::SUCCESS) {
-          throw std::runtime_error("cyber_lineplot_sink: Superluminal::Plot failed");
-      }
-
-      d_stop_ticker.store(false, std::memory_order_release);
-      d_ticker = std::thread([this]() {
-          while (!d_stop_ticker.load(std::memory_order_acquire)) {
-              if (Superluminal::Presenting()) {
-                  drain_ring_to_tensor();
-                  Superluminal::Update();
-              }
-              std::this_thread::sleep_for(std::chrono::milliseconds(16));
-          }
-      });
+      };
+      cyber_context::instance().register_plot({ this, d_name, config });
 
       return sync_block::start();
     }
@@ -95,10 +64,7 @@ namespace gr {
     bool
     cyber_lineplot_sink_impl::stop()
     {
-      d_stop_ticker.store(true, std::memory_order_release);
-      if (d_ticker.joinable()) {
-          d_ticker.join();
-      }
+      cyber_context::instance().unregister_plot(this);
       return sync_block::stop();
     }
 
@@ -112,18 +78,25 @@ namespace gr {
       }
 
       const input_type* in = static_cast<const input_type*>(input_items[0]);
-      size_t samples_to_push = static_cast<size_t>(noutput_items);
+      size_t n = static_cast<size_t>(noutput_items);
 
-      // For visualization, keep the newest samples if GNU Radio hands us a chunk
-      // larger than the queue. If the consumer falls behind, push() drops the
-      // overflow by returning fewer items, but the sink still consumes all input
-      // so it does not back-pressure the flowgraph.
-      if (samples_to_push > d_buffer_size) {
-          in += samples_to_push - d_buffer_size;
-          samples_to_push = d_buffer_size;
+      // For visualization, keep only the newest buffer_size samples if GNU Radio
+      // hands us a bigger chunk. We always consume everything, so the sink never
+      // back-pressures the flowgraph.
+      if (n > d_buffer_size) {
+          in += n - d_buffer_size;
+          n = d_buffer_size;
       }
 
-      d_ring.push(in, samples_to_push);
+      // Write straight into the display tensor as a rolling buffer. Superluminal
+      // reads this tensor in place (DMI is a no-op: "data comes from external
+      // memory"). cyber_context::present() drives Superluminal::Update() on a
+      // single ~60 Hz thread; work() never calls into Superluminal.
+      CF32* display = d_tensor.data<CF32>();
+      for (size_t i = 0; i < n; ++i) {
+          display[d_display_write_ptr] = in[i];
+          d_display_write_ptr = (d_display_write_ptr + 1) % d_buffer_size;
+      }
 
       return noutput_items;
     }

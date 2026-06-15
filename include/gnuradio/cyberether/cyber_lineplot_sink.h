@@ -18,8 +18,8 @@ namespace gr {
      * \brief Time-domain line plot sink.
      * \ingroup cyberether
      *
-     * Buffers incoming complex samples into a ring buffer that is displayed
-     * as a real-valued time-domain line. The window is opened by present().
+     * Buffers incoming complex samples into a display tensor shown as a
+     * real-valued time-domain line. The window is opened by cyberether.present().
      */
     class CYBERETHER_API cyber_lineplot_sink : virtual public gr::sync_block
     {
