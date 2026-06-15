@@ -33,6 +33,12 @@ gr_pybind_make_oot(cyberether ../../.. gr::cyberether "${cyberether_python_files
 target_compile_features(cyberether_python PRIVATE cxx_std_20)
 target_link_directories(cyberether_python PRIVATE ${CYBERETHER_LIBRARY_DIRS})
 
+# cyber_context.h pulls in <jetstream/superluminal.hh>, which bundles its own
+# fmt under jst::fmt. Search CyberEther's include dir BEFORE any system path so
+# the binding does not resolve against a stray jetstream install (mirrors
+# lib/CMakeLists.txt).
+target_include_directories(cyberether_python BEFORE PRIVATE ${CYBERETHER_INCLUDE_DIRS})
+
 # copy bindings extension for use in QA test module
 add_custom_command(
     TARGET cyberether_python

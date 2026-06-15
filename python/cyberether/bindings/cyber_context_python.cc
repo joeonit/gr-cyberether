@@ -15,11 +15,12 @@ namespace py = pybind11;
 
 void bind_cyber_context(py::module& m)
 {
-    using cyber_context = gr::cyberether::cyber_context;
-
-    py::class_<cyber_context, std::shared_ptr<cyber_context>>(m, "cyber_context")
-        .def(py::init<>())
-        .def("run", &cyber_context::run, py::call_guard<py::gil_scoped_release>())
-        .def("is_presenting", &cyber_context::is_presenting)
-        ;
+    // The entry point used by a GRC snippet / Python launcher:
+    //     cyberether.present()
+    //
+    m.def("present",
+          &gr::cyberether::present,
+          py::call_guard<py::gil_scoped_release>(),
+          "Open the CyberEther window on the calling (main) thread, showing "
+          "every registered CyberEther sink, and block until it is closed.");
 }
