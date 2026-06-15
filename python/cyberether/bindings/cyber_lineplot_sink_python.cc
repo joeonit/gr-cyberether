@@ -14,7 +14,7 @@
 /* BINDTOOL_GEN_AUTOMATIC(0)                                                       */
 /* BINDTOOL_USE_PYGCCXML(0)                                                        */
 /* BINDTOOL_HEADER_FILE(cyber_lineplot_sink.h)                                        */
-/* BINDTOOL_HEADER_FILE_HASH(79f4ddf6378a384924b93f2555389b5d)                     */
+/* BINDTOOL_HEADER_FILE_HASH(81299383f3edd0ab90ffccd7255fe6f9)                     */
 /***********************************************************************************/
 
 #include <pybind11/complex.h>
@@ -40,16 +40,6 @@ void bind_cyber_lineplot_sink(py::module& m)
            py::arg("buffer_size") = 4096,
            py::arg("name") = "lineplot",
            D(cyber_lineplot_sink,make)
-        )
-
-
-        .def("present", &cyber_lineplot_sink::present,
-           D(cyber_lineplot_sink,present)
-        )
-
-
-        .def("is_presenting", &cyber_lineplot_sink::is_presenting,
-           D(cyber_lineplot_sink,is_presenting)
         )
 
         ;

@@ -2,8 +2,11 @@
 #define INCLUDED_CYBERETHER_SPSC_RING_H
 
 // Class SpscRing (Single Producer Single Consumer Ring Buffer)
-// one producer(GR scheduler), one consumer(Superluminal), no locking.
+// one producer, one consumer, no locking.
 // Note: Thread safety is strictly dependent on the 1:1 mapping.
+//
+// Currently unused by gr-cyberether. as it introduces unnecessary overhead
+// and upon research turns out that superluminal reads from present tensor(buffer) directly
 
 #include <algorithm>
 #include <atomic>
