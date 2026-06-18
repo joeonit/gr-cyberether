@@ -15,10 +15,13 @@ import os
 
 # import pybind11 generated symbols into the cyberether namespace
 try:
-    # this might fail if the module is python-only
     from . import cyberether_python as _cyberether_python
     from .cyberether_python import *
-except ModuleNotFoundError:
+except ImportError:
+    # Either the C++ extension is absent (python-only install) or the binding
+    # was built against a different pybind11 ABI than the runtime's gr_python.
+    # Either way, leave the package importable so subpackages like .workflows
+    # (which don't need the binding) keep working.
     _cyberether_python = None
 
 # import any pure python here

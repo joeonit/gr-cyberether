@@ -48,6 +48,15 @@ endif(APPLE)
 include(GrMiscUtils)
 gr_library_foo(gnuradio-cyberether)
 
+# GR main turned gr_library_foo into a registration-only function (install is
+# now driven by the component framework). For OOTs we still need an explicit
+# install(TARGETS) so the shared library actually lands in the prefix.
+install(
+    TARGETS gnuradio-cyberether
+    LIBRARY DESTINATION lib
+    ARCHIVE DESTINATION lib
+    RUNTIME DESTINATION bin)
+
 ########################################################################
 # Print summary
 ########################################################################

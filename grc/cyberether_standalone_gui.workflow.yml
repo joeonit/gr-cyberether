@@ -1,0 +1,33 @@
+id: cyberether_standalone_gui_workflow
+description: "Python CyberEther GUI workflow"
+output_language: python
+output_language_label: Python
+generator_module: gnuradio.cyberether.workflows.cyberether_standalone_gui
+generator_class: CyberetherStandaloneGuiGenerator
+generate_options: cyberether_gui
+generate_options_label: CyberEther GUI
+parameters:
+-   id: run
+    label: Run
+    dtype: bool
+    default: 'True'
+    options: ['True', 'False']
+    option_labels: [Autostart, 'Off']
+    hide: ${ 'part' if run else 'none' }
+-   id: max_nouts
+    label: Max Number of Output
+    dtype: int
+    default: '0'
+    hide: ${ 'none' if max_nouts else 'part' }
+-   id: realtime_scheduling
+    label: Realtime Scheduling
+    dtype: enum
+    options: ['', '1']
+    option_labels: ['Off', 'On']
+    hide: ${ 'none' if realtime_scheduling else 'part' }
+-   id: run_command
+    label: Run Command
+    category: Advanced
+    dtype: string
+    default: '{python} -u {filename}'
+    hide: 'part'

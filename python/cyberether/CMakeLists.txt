@@ -21,6 +21,24 @@ add_subdirectory(bindings)
 ########################################################################
 gr_python_install(FILES __init__.py DESTINATION ${GR_PYTHON_DIR}/gnuradio/cyberether)
 
+# Workflow generator module (importable as
+# gnuradio.cyberether.workflows.cyberether_standalone_gui, referenced by
+# grc/cyberether_standalone_gui.workflow.yml -> generator_module).
+gr_python_install(
+    FILES workflows/__init__.py
+    DESTINATION ${GR_PYTHON_DIR}/gnuradio/cyberether/workflows)
+
+gr_python_install(
+    FILES
+        workflows/cyberether_standalone_gui/__init__.py
+        workflows/cyberether_standalone_gui/top_block.py
+    DESTINATION
+        ${GR_PYTHON_DIR}/gnuradio/cyberether/workflows/cyberether_standalone_gui)
+
+install(
+    FILES workflows/cyberether_standalone_gui/flow_graph_cyberether.py.mako
+    DESTINATION ${GR_PYTHON_DIR}/gnuradio/cyberether/workflows/cyberether_standalone_gui)
+
 ########################################################################
 # Handle the unit tests
 ########################################################################
