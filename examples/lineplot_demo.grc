@@ -9,7 +9,7 @@ options:
     description: Feed a cosine into the CyberEther line plot sink and present it.
     gen_cmake: 'On'
     gen_linking: dynamic
-    generate_options: no_gui
+    generate_options: cyberether_gui
     hier_block_src_path: '.:'
     id: lineplot_demo
     max_nouts: '0'
@@ -104,22 +104,6 @@ blocks:
     coordinate: [600, 264.0]
     rotation: 0
     state: enabled
-- name: snippet_present
-  id: snippet
-  parameters:
-    alias: ''
-    code: self.cyberether_cyber_lineplot_sink_0.present()
-    comment: ''
-    priority: '0'
-    section: main_after_start
-  states:
-    bus_sink: false
-    bus_source: false
-    bus_structure: null
-    coordinate: [632, 96.0]
-    rotation: 0
-    state: enabled
-
 connections:
 - [analog_sig_source_x_0, '0', blocks_throttle2_0, '0']
 - [blocks_throttle2_0, '0', cyberether_cyber_lineplot_sink_0, '0']
