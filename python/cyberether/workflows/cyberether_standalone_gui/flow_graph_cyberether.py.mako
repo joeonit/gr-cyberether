@@ -225,16 +225,17 @@ def main(top_block_cls=${class_name}, options=None):
     signal.signal(signal.SIGTERM, sig_handler)
 
     % if flow_graph.get_option('run'):
-    # cyberether.present(tb) starts the flowgraph, opens the CyberEther window
-    # on the main thread, blocks until the user closes it, then stops/waits the
-    # flowgraph. The window event loop owns the main thread for the duration.
+    # cyberether.present(tb, device=...) starts the flowgraph, opens the
+    # CyberEther window on the main thread, blocks until the user closes it,
+    # then stops/waits the flowgraph. The window event loop owns the main
+    # thread for the duration. `device` selects the renderer backend.
     % for m in monitors:
     % if m.params['en'].get_value() == 'True':
     tb.${m.name}.start()
     % endif
     % endfor
     ${'snippets_main_after_start(tb)' if snippets['main_after_start'] else ''}
-    cyberether.present(tb)
+    cyberether.present(tb, device=cyberether.DeviceType.${flow_graph.get_option('device') or 'Auto'})
     % for m in monitors:
     % if m.params['en'].get_value() == 'True':
     tb.${m.name}.stop()

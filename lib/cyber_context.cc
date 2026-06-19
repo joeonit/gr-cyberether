@@ -51,10 +51,21 @@ namespace gr {
 
 
     void
-    cyber_context::present()
+    cyber_context::present(Jetstream::DeviceType device)
     {
       if (d_started.exchange(true, std::memory_order_acq_rel)) {
           JST_WARN("[gr-cyberether] present() is already running; ignoring re-entry.");
+          return;
+      }
+
+      // Initialize Superluminal with the caller-chosen renderer device. Must
+      // happen BEFORE the first Plot() — otherwise Plot() lazily initialises
+      // with default config and our device choice is ignored.
+      Superluminal::InstanceConfig config;
+      config.device = device;
+      if (Superluminal::Initialize(config) != Result::SUCCESS) {
+          JST_FATAL("[gr-cyberether] Superluminal::Initialize failed.");
+          d_started.store(false, std::memory_order_release);
           return;
       }
 
@@ -150,9 +161,9 @@ namespace gr {
     }
 
     void
-    present()
+    present(Jetstream::DeviceType device)
     {
-      cyber_context::instance().present();
+      cyber_context::instance().present(device);
     }
 
   } // namespace cyberether

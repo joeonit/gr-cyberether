@@ -15,12 +15,27 @@ namespace py = pybind11;
 
 void bind_cyber_context(py::module& m)
 {
+    // Expose Jetstream::DeviceType so flowgraphs / scripts can pick a renderer.
+    // "None" is a Python keyword, so the auto-pick value is exposed as "Auto".
+    py::enum_<Jetstream::DeviceType>(m, "DeviceType",
+        "Superluminal renderer device. Pass to cyberether.present().")
+        .value("Auto",   Jetstream::DeviceType::None)
+        .value("CPU",    Jetstream::DeviceType::CPU)
+        .value("CUDA",   Jetstream::DeviceType::CUDA)
+        .value("Metal",  Jetstream::DeviceType::Metal)
+        .value("Vulkan", Jetstream::DeviceType::Vulkan)
+        .value("WebGPU", Jetstream::DeviceType::WebGPU)
+        .export_values();
+
     // The entry point used by a GRC snippet / Python launcher:
     //     cyberether.present()
+    //     cyberether.present(device=cyberether.DeviceType.Metal)
     //
     m.def("present",
           &gr::cyberether::present,
+          py::arg("device") = Jetstream::DeviceType::None,
           py::call_guard<py::gil_scoped_release>(),
           "Open the CyberEther window on the calling (main) thread, showing "
-          "every registered CyberEther sink, and block until it is closed.");
+          "every registered CyberEther sink, and block until it is closed. "
+          "`device` selects the renderer backend (default Auto).");
 }

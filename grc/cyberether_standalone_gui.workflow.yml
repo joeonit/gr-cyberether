@@ -25,6 +25,13 @@ parameters:
     options: ['', '1']
     option_labels: ['Off', 'On']
     hide: ${ 'none' if realtime_scheduling else 'part' }
+-   id: device
+    label: Renderer Device
+    dtype: enum
+    default: Auto
+    options: [Auto, CPU, CUDA, Metal, Vulkan, WebGPU]
+    option_labels: [Auto, CPU, CUDA, Metal, Vulkan, WebGPU]
+    hide: ${ 'none' if device != 'Auto' else 'part' }
 -   id: run_command
     label: Run Command
     category: Advanced

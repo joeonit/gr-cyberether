@@ -50,8 +50,13 @@ namespace gr {
        *
        * Lays every registered plot out in a square grid, then runs the full
        * Superluminal lifecycle. Must be called on the main thread.
+       *
+       * \param device  Renderer device. DeviceType::None means "auto-pick the
+       *                best for this platform" (Metal on macOS, Vulkan on
+       *                Linux, etc.). Pass an explicit value to force a
+       *                specific backend.
        */
-      void present();
+      void present(Jetstream::DeviceType device = Jetstream::DeviceType::None);
 
 
       cyber_context(const cyber_context&)            = delete;
@@ -69,7 +74,7 @@ namespace gr {
     /*!
      * \brief Open the CyberEther window (convenience entry point).
      */
-    CYBERETHER_API void present();
+    CYBERETHER_API void present(Jetstream::DeviceType device = Jetstream::DeviceType::None);
 
   } // namespace cyberether
 } // namespace gr

@@ -1,0 +1,214 @@
+options:
+  parameters:
+    alias: ''
+    author: Youssef Mahmoud
+    catch_exceptions: 'True'
+    comment: ''
+    copyright: ''
+    description: Mixed-type sink demo. One complex sink (cosine + noise) and one float
+      sink (sawtooth) share the same CyberEther window. The window also uses an explicit
+      renderer device (Metal) instead of Auto.
+    device: Metal
+    gen_linking: dynamic
+    generate_options: cyberether_gui
+    generator_class_name: CyberetherStandaloneGuiGenerator
+    generator_module: gnuradio.cyberether.workflows.cyberether_standalone_gui
+    hier_block_src_path: '.:'
+    id: lineplot_types_and_device_demo
+    max_nouts: '0'
+    output_language: python
+    realtime_scheduling: ''
+    run: 'True'
+    run_command: '{python} -u {filename}'
+    thread_safe_setters: ''
+    title: CyberEther Line Plot - Mixed Types + Renderer Device
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [8, 8]
+    rotation: 0
+    state: enabled
+
+blocks:
+- name: samp_rate
+  id: variable
+  parameters:
+    comment: ''
+    value: '48000'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [200, 12]
+    rotation: 0
+    state: enabled
+- name: analog_noise_source_x_c
+  id: analog_noise_source_x
+  parameters:
+    affinity: ''
+    alias: ''
+    amp: '0.1'
+    comment: ''
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    noise_type: analog.GR_GAUSSIAN
+    seed: '0'
+    type: complex
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [80, 256]
+    rotation: 0
+    state: enabled
+- name: analog_sig_source_x_c
+  id: analog_sig_source_x
+  parameters:
+    affinity: ''
+    alias: ''
+    amp: '0.8'
+    comment: ''
+    freq: '500'
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    offset: '0'
+    phase: '0'
+    samp_rate: samp_rate
+    showports: 'False'
+    type: complex
+    waveform: analog.GR_COS_WAVE
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [80, 160]
+    rotation: 0
+    state: enabled
+- name: analog_sig_source_x_f
+  id: analog_sig_source_x
+  parameters:
+    affinity: ''
+    alias: ''
+    amp: '0.9'
+    comment: ''
+    freq: '1200'
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    offset: '0'
+    phase: '0'
+    samp_rate: samp_rate
+    showports: 'False'
+    type: float
+    waveform: analog.GR_SAW_WAVE
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [80, 432]
+    rotation: 0
+    state: enabled
+- name: blocks_add_xx_c
+  id: blocks_add_xx
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: ''
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    num_inputs: '2'
+    type: complex
+    vlen: '1'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [304, 200]
+    rotation: 0
+    state: enabled
+- name: blocks_throttle2_c
+  id: blocks_throttle2
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: ''
+    ignoretag: 'True'
+    limit: auto
+    maximum: '0.1'
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    samples_per_second: samp_rate
+    type: complex
+    vlen: '1'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [488, 208]
+    rotation: 0
+    state: enabled
+- name: blocks_throttle2_f
+  id: blocks_throttle2
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: ''
+    ignoretag: 'True'
+    limit: auto
+    maximum: '0.1'
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    samples_per_second: samp_rate
+    type: float
+    vlen: '1'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [440, 432.0]
+    rotation: 0
+    state: enabled
+- name: cyberether_cyber_lineplot_sink_complex
+  id: cyberether_cyber_lineplot_sink
+  parameters:
+    affinity: ''
+    alias: ''
+    buffer_size: '1024'
+    comment: ''
+    name: '"cosine + noise (complex)"'
+    type: complex
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [720, 208]
+    rotation: 0
+    state: enabled
+- name: cyberether_cyber_lineplot_sink_float
+  id: cyberether_cyber_lineplot_sink
+  parameters:
+    affinity: ''
+    alias: ''
+    buffer_size: '1024'
+    comment: ''
+    name: '"sawtooth (float)"'
+    type: float
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [696, 432.0]
+    rotation: 0
+    state: enabled
+
+connections:
+- [analog_noise_source_x_c, '0', blocks_add_xx_c, '1']
+- [analog_sig_source_x_c, '0', blocks_add_xx_c, '0']
+- [analog_sig_source_x_f, '0', blocks_throttle2_f, '0']
+- [blocks_add_xx_c, '0', blocks_throttle2_c, '0']
+- [blocks_throttle2_c, '0', cyberether_cyber_lineplot_sink_complex, '0']
+- [blocks_throttle2_f, '0', cyberether_cyber_lineplot_sink_float, '0']
+
+metadata:
+  file_format: 1
+  grc_version: v3.11.0.0git-1100-gf06564b3

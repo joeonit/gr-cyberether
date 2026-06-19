@@ -31,14 +31,25 @@ except ImportError:
 
 
 # Open the CyberEther window and block until it is closed.
-def present(tb=None):
+def present(tb=None, device=None):
+    """Open the CyberEther window on the main thread.
+
+    Args:
+        tb:     optional top_block; if given, it is started before the window
+                opens and stopped/waited after it closes.
+        device: optional cyberether.DeviceType selecting the renderer backend
+                (Auto / CPU / CUDA / Metal / Vulkan / WebGPU). Default Auto.
+    """
     if _cyberether_python is None:
         raise RuntimeError("cyberether C++ extension is not available")
+
+    if device is None:
+        device = _cyberether_python.DeviceType.Auto
 
     if tb is not None:
         tb.start()
     try:
-        _cyberether_python.present()
+        _cyberether_python.present(device)
     finally:
         if tb is not None:
             tb.stop()
