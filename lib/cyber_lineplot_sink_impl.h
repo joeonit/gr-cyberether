@@ -15,13 +15,14 @@
 namespace gr {
   namespace cyberether {
 
-    class cyber_lineplot_sink_impl : public cyber_lineplot_sink
+    template <typename T>
+    class cyber_lineplot_sink_impl : public cyber_lineplot_sink<T>
     {
      private:
          const uint64_t d_buffer_size;
          const std::string d_name;
          uint64_t d_display_write_ptr;    // rolling write head into d_tensor
-         Jetstream::Tensor d_tensor;      // display buffer, CF32, shape {1, N};
+         Jetstream::Tensor d_tensor;      // display buffer, always CF32, shape {1, N};
                                           // written by work(), read in place by Superluminal
 
      public:

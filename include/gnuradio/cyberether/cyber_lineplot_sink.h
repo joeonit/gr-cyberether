@@ -9,6 +9,7 @@
 #define INCLUDED_CYBERETHER_CYBER_LINEPLOT_SINK_H
 
 #include <gnuradio/cyberether/api.h>
+#include <gnuradio/gr_complex.h>
 #include <gnuradio/sync_block.h>
 
 namespace gr {
@@ -18,25 +19,27 @@ namespace gr {
      * \brief Time-domain line plot sink.
      * \ingroup cyberether
      *
-     * Buffers incoming complex samples into a display tensor shown as a
-     * real-valued time-domain line. The window is opened by cyberether.present().
+     * Buffers incoming samples (complex or float) into a CF32 display tensor
+     * shown as a real-valued time-domain line. The window is opened by
+     * cyberether.present().
+     *
+     * The class is templated on the input sample type. Two instantiations are
+     * provided: \ref cyber_lineplot_sink_c (complex) and \ref
+     * cyber_lineplot_sink_f (float). GRC users pick the type from the block's
+     * "Input Type" dropdown.
      */
+    template <typename T>
     class CYBERETHER_API cyber_lineplot_sink : virtual public gr::sync_block
     {
      public:
-      typedef std::shared_ptr<cyber_lineplot_sink> sptr;
+      typedef std::shared_ptr<cyber_lineplot_sink<T>> sptr;
 
-      /*!
-       * \brief Return a shared_ptr to a new instance of cyberether::cyber_lineplot_sink.
-       *
-       * To avoid accidental use of raw pointers, cyberether::cyber_lineplot_sink's
-       * constructor is in a private implementation
-       * class. cyberether::cyber_lineplot_sink::make is the public interface for
-       * creating new instances.
-       */
       static sptr make(size_t buffer_size = 4096,
                        const std::string& name = "lineplot");
     };
+
+    typedef cyber_lineplot_sink<gr_complex> cyber_lineplot_sink_c;
+    typedef cyber_lineplot_sink<float>      cyber_lineplot_sink_f;
 
   } // namespace cyberether
 } // namespace gr

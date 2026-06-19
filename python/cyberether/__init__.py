@@ -17,6 +17,9 @@ import os
 try:
     from . import cyberether_python as _cyberether_python
     from .cyberether_python import *
+    # Back-compat: pre-2026-06 flowgraphs used cyberether.cyber_lineplot_sink(...)
+    # before the complex/float type split. Alias it to the complex variant.
+    cyber_lineplot_sink = cyber_lineplot_sink_c
 except ImportError:
     # Either the C++ extension is absent (python-only install) or the binding
     # was built against a different pybind11 ABI than the runtime's gr_python.

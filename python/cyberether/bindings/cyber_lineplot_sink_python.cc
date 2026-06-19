@@ -14,7 +14,7 @@
 /* BINDTOOL_GEN_AUTOMATIC(0)                                                       */
 /* BINDTOOL_USE_PYGCCXML(0)                                                        */
 /* BINDTOOL_HEADER_FILE(cyber_lineplot_sink.h)                                        */
-/* BINDTOOL_HEADER_FILE_HASH(81299383f3edd0ab90ffccd7255fe6f9)                     */
+/* BINDTOOL_HEADER_FILE_HASH(73909b3821dfa9d6aa8bef78ea6a4252)                     */
 /***********************************************************************************/
 
 #include <pybind11/complex.h>
@@ -24,23 +24,20 @@
 namespace py = pybind11;
 
 #include <gnuradio/cyberether/cyber_lineplot_sink.h>
-// pydoc.h is automatically generated in the build directory
-#include <cyber_lineplot_sink_pydoc.h>
+
+template <typename T>
+static void bind_one(py::module& m, const char* name)
+{
+    using sink = gr::cyberether::cyber_lineplot_sink<T>;
+    py::class_<sink, gr::sync_block, gr::block, gr::basic_block,
+               std::shared_ptr<sink>>(m, name)
+        .def(py::init(&sink::make),
+             py::arg("buffer_size") = 4096,
+             py::arg("name")        = "lineplot");
+}
 
 void bind_cyber_lineplot_sink(py::module& m)
 {
-
-    using cyber_lineplot_sink    = gr::cyberether::cyber_lineplot_sink;
-
-
-    py::class_<cyber_lineplot_sink, gr::sync_block, gr::block, gr::basic_block,
-        std::shared_ptr<cyber_lineplot_sink>>(m, "cyber_lineplot_sink", D(cyber_lineplot_sink))
-
-        .def(py::init(&cyber_lineplot_sink::make),
-           py::arg("buffer_size") = 4096,
-           py::arg("name") = "lineplot",
-           D(cyber_lineplot_sink,make)
-        )
-
-        ;
+    bind_one<gr_complex>(m, "cyber_lineplot_sink_c");
+    bind_one<float>     (m, "cyber_lineplot_sink_f");
 }
