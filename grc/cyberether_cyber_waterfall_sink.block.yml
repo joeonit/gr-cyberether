@@ -1,0 +1,28 @@
+id: cyberether_cyber_waterfall_sink
+label: CyberEther Waterfall Sink
+category: '[cyberether]'
+
+parameters:
+- id: name
+  label: Plot Name
+  dtype: string
+  default: '"waterfall"'
+- id: fft_size
+  label: FFT Size
+  dtype: int
+  default: '1024'
+- id: height
+  label: History Rows
+  dtype: int
+  default: '512'
+
+inputs:
+- label: in
+  domain: stream
+  dtype: complex
+
+templates:
+  imports: from gnuradio import cyberether
+  make: cyberether.cyber_waterfall_sink(${fft_size}, ${name}, ${height})
+
+file_format: 1

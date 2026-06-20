@@ -53,3 +53,4 @@ add_custom_target(
     COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}
             ${PROJECT_BINARY_DIR}/test_modules/gnuradio/cyberether/)
 GR_ADD_TEST(qa_cyber_lineplot_sink ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/qa_cyber_lineplot_sink.py)
+GR_ADD_TEST(qa_cyber_waterfall_sink ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/qa_cyber_waterfall_sink.py)

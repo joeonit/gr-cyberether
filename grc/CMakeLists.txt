@@ -10,4 +10,4 @@ install(FILES
     cyberether_cyber_null_sink.block.yml
     cyberether_cyber_lineplot_sink.block.yml
     cyberether_standalone_gui.workflow.yml
-    DESTINATION share/gnuradio/grc/blocks)
+    cyberether_cyber_waterfall_sink.block.yml DESTINATION share/gnuradio/grc/blocks)
