@@ -1,0 +1,52 @@
+id: cyberether_cyber_waterfall_sink
+label: CyberEther Waterfall Sink
+category: '[cyberether]'
+
+parameters:
+- id: type
+  label: Input Type
+  dtype: enum
+  options: [complex, float]
+  option_labels: [Complex, Float]
+  option_attributes:
+    fcn:     [cyber_waterfall_sink_c, cyber_waterfall_sink_f]
+    in_type: [complex,                float]
+  hide: part
+
+- id: name
+  label: Plot Name
+  dtype: string
+  default: '"waterfall"'
+- id: fft_size
+  label: FFT Size
+  dtype: int
+  default: '1024'
+- id: height
+  label: History Rows
+  dtype: int
+  default: '512'
+
+- id: operation
+  label: Operation
+  dtype: enum
+  default: Amplitude
+  options: [Amplitude, Phase, Real, Imaginary]
+  option_labels: [Amplitude, Phase, Real, Imaginary]
+
+- id: display
+  label: Display Domain
+  dtype: enum
+  default: Frequency
+  options: [Frequency, Time]
+  option_labels: [Frequency (spectrum), Time (amplitude strip)]
+
+inputs:
+- label: in
+  domain: stream
+  dtype: ${type.in_type}
+
+templates:
+  imports: from gnuradio import cyberether
+  make: cyberether.${type.fcn}(${fft_size}, ${name}, ${height}, cyberether.Operation.${operation}, cyberether.Domain.${display})
+
+file_format: 1

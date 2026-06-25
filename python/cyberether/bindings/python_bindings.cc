@@ -24,6 +24,7 @@ namespace py = pybind11;
     void bind_cyber_null_sink(py::module& m);
     void bind_cyber_lineplot_sink(py::module& m);
     void bind_cyber_context(py::module& m);
+    void bind_cyber_waterfall_sink(py::module& m);
 // ) END BINDING_FUNCTION_PROTOTYPES
 
 
@@ -55,5 +56,6 @@ PYBIND11_MODULE(cyberether_python, m)
     bind_cyber_null_sink(m);
     bind_cyber_lineplot_sink(m);
     bind_cyber_context(m);
+    bind_cyber_waterfall_sink(m);
     // ) END BINDING_FUNCTION_CALLS
 }
