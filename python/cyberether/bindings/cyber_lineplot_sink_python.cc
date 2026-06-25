@@ -14,7 +14,7 @@
 /* BINDTOOL_GEN_AUTOMATIC(0)                                                       */
 /* BINDTOOL_USE_PYGCCXML(0)                                                        */
 /* BINDTOOL_HEADER_FILE(cyber_lineplot_sink.h)                                        */
-/* BINDTOOL_HEADER_FILE_HASH(73909b3821dfa9d6aa8bef78ea6a4252)                     */
+/* BINDTOOL_HEADER_FILE_HASH(bc8bd5381e765161c98e28018c2fb163)                     */
 /***********************************************************************************/
 
 #include <pybind11/complex.h>
@@ -24,6 +24,7 @@
 namespace py = pybind11;
 
 #include <gnuradio/cyberether/cyber_lineplot_sink.h>
+#include <jetstream/superluminal.hh>
 
 template <typename T>
 static void bind_one(py::module& m, const char* name)
@@ -33,7 +34,9 @@ static void bind_one(py::module& m, const char* name)
                std::shared_ptr<sink>>(m, name)
         .def(py::init(&sink::make),
              py::arg("buffer_size") = 4096,
-             py::arg("name")        = "lineplot");
+             py::arg("name")        = "lineplot",
+             py::arg("display")     = Jetstream::Superluminal::Domain::Time,
+             py::arg("operation")   = Jetstream::Superluminal::Operation::Real);
 }
 
 void bind_cyber_lineplot_sink(py::module& m)
