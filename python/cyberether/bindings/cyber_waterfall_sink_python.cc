@@ -14,7 +14,7 @@
 /* BINDTOOL_GEN_AUTOMATIC(0)                                                       */
 /* BINDTOOL_USE_PYGCCXML(0)                                                        */
 /* BINDTOOL_HEADER_FILE(cyber_waterfall_sink.h)                                        */
-/* BINDTOOL_HEADER_FILE_HASH(1d5c8e7b398e576d670295be565ae212)                     */
+/* BINDTOOL_HEADER_FILE_HASH(91254039774674d2b03d04cb419ac84c)                     */
 /***********************************************************************************/
 
 #include <pybind11/complex.h>
@@ -24,6 +24,7 @@
 namespace py = pybind11;
 
 #include <gnuradio/cyberether/cyber_waterfall_sink.h>
+#include <jetstream/superluminal.hh>
 
 template <typename T>
 static void bind_one(py::module& m, const char* name)
@@ -32,9 +33,11 @@ static void bind_one(py::module& m, const char* name)
     py::class_<sink, gr::sync_block, gr::block, gr::basic_block,
                std::shared_ptr<sink>>(m, name)
         .def(py::init(&sink::make),
-             py::arg("fft_size") = 1024,
-             py::arg("name")     = "waterfall",
-             py::arg("height")   = 512);
+             py::arg("fft_size")  = 1024,
+             py::arg("name")      = "waterfall",
+             py::arg("height")    = 512,
+             py::arg("operation") = Jetstream::Superluminal::Operation::Amplitude,
+             py::arg("display")   = Jetstream::Superluminal::Domain::Frequency);
 }
 
 void bind_cyber_waterfall_sink(py::module& m)
