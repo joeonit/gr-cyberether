@@ -10,23 +10,33 @@
 #include <gnuradio/cyberether/cyber_context.h>
 #include <jetstream/logger.hh>
 
+#include <type_traits>
+
 namespace gr {
   namespace cyberether {
     using namespace Jetstream;
 
-    using input_type = gr_complex;
-
-    cyber_waterfall_sink::sptr
-    cyber_waterfall_sink::make(size_t fft_size, const std::string& name, int height)
+    template <typename T>
+    static const char* block_name()
     {
-      return gnuradio::make_block_sptr<cyber_waterfall_sink_impl>(
+        if constexpr (std::is_same_v<T, gr_complex>) return "cyber_waterfall_sink_c";
+        else if constexpr (std::is_same_v<T, float>) return "cyber_waterfall_sink_f";
+        else                                          return "cyber_waterfall_sink";
+    }
+
+    template <typename T>
+    typename cyber_waterfall_sink<T>::sptr
+    cyber_waterfall_sink<T>::make(size_t fft_size, const std::string& name, int height)
+    {
+      return gnuradio::make_block_sptr<cyber_waterfall_sink_impl<T>>(
           fft_size, name, height);
     }
 
-    cyber_waterfall_sink_impl::cyber_waterfall_sink_impl(
+    template <typename T>
+    cyber_waterfall_sink_impl<T>::cyber_waterfall_sink_impl(
         size_t fft_size, const std::string& name, int height)
-      : gr::sync_block("cyber_waterfall_sink",
-              gr::io_signature::make(1, 1, sizeof(input_type)),
+      : gr::sync_block(block_name<T>(),
+              gr::io_signature::make(1, 1, sizeof(T)),
               gr::io_signature::make(0, 0, 0)),
       d_fft_size(fft_size == 0 ? 1 : fft_size),
       d_height(height <= 0 ? 512 : height),
@@ -35,18 +45,20 @@ namespace gr {
       d_tensor(DeviceType::CPU, TypeToDataType<CF32>(),
                {1, static_cast<U64>(d_fft_size)})
     {
-      JST_INFO("[gr-cyberether] cyber_waterfall_sink '{}' constructed: "
+      JST_INFO("[gr-cyberether] {} '{}' constructed: "
                "{} samples per row, {} row history.",
-               d_name, d_fft_size, d_height);
+               block_name<T>(), d_name, d_fft_size, d_height);
     }
 
-    cyber_waterfall_sink_impl::~cyber_waterfall_sink_impl()
+    template <typename T>
+    cyber_waterfall_sink_impl<T>::~cyber_waterfall_sink_impl()
     {
       cyber_context::instance().unregister_plot(this);
     }
 
+    template <typename T>
     bool
-    cyber_waterfall_sink_impl::start()
+    cyber_waterfall_sink_impl<T>::start()
     {
       // Same register-don't-Plot pattern as the line sink: Plot() is issued
       // by cyber_context::present() on the main thread, after the mosaic
@@ -63,15 +75,17 @@ namespace gr {
       return sync_block::start();
     }
 
+    template <typename T>
     bool
-    cyber_waterfall_sink_impl::stop()
+    cyber_waterfall_sink_impl<T>::stop()
     {
       cyber_context::instance().unregister_plot(this);
       return sync_block::stop();
     }
 
+    template <typename T>
     int
-    cyber_waterfall_sink_impl::work(int noutput_items,
+    cyber_waterfall_sink_impl<T>::work(int noutput_items,
         gr_vector_const_void_star& input_items,
         gr_vector_void_star& /*output_items*/)
     {
@@ -79,14 +93,13 @@ namespace gr {
           return 0;
       }
 
-      const input_type* in = static_cast<const input_type*>(input_items[0]);
+      const T* in = static_cast<const T*>(input_items[0]);
       size_t n = static_cast<size_t>(noutput_items);
 
-      // Visualisation: keep only the newest fft_size samples if GR hands us a
-      // bigger chunk. We always consume everything (no back-pressure on the
-      // flowgraph) and write into the buffer as a rolling window. Superluminal
-      // FFTs the buffer on each Update() and appends one row to its internal
-      // waterfall history.
+      // Keep only the newest fft_size samples per work() call. We always
+      // consume everything (no back-pressure). The buffer is always CF32;
+      // float inputs become CF32{x, 0} via if constexpr and Superluminal's
+      // FFT path handles them transparently.
       if (n > d_fft_size) {
           in += n - d_fft_size;
           n = d_fft_size;
@@ -94,12 +107,22 @@ namespace gr {
 
       CF32* display = d_tensor.data<CF32>();
       for (size_t i = 0; i < n; ++i) {
-          display[d_write_ptr] = in[i];
+          if constexpr (std::is_same_v<T, gr_complex>) {
+              display[d_write_ptr] = in[i];
+          } else {
+              display[d_write_ptr] = CF32{static_cast<float>(in[i]), 0.0f};
+          }
           d_write_ptr = (d_write_ptr + 1) % d_fft_size;
       }
 
       return noutput_items;
     }
+
+    // Explicit instantiations — must match the typedefs in the public header.
+    template class cyber_waterfall_sink<gr_complex>;
+    template class cyber_waterfall_sink<float>;
+    template class cyber_waterfall_sink_impl<gr_complex>;
+    template class cyber_waterfall_sink_impl<float>;
 
   } /* namespace cyberether */
 } /* namespace gr */

@@ -16,18 +16,24 @@ namespace gr {
   namespace cyberether {
 
     /*!
-     * \brief Spectrum waterfall sink (minimal).
+     * \brief Spectrum waterfall sink.
      * \ingroup cyberether
      *
-     * Accepts a complex time-domain stream, keeps a rolling fft_size-sample
-     * frame in a 1D buffer, and lets Superluminal handle the FFT and the
-     * scrolling history internally. The window is opened by
+     * Accepts a time-domain stream (complex or float), keeps a rolling
+     * fft_size-sample frame in a 1D CF32 buffer, and lets Superluminal handle
+     * the FFT and the scrolling history internally. The window is opened by
      * cyberether.present().
+     *
+     * The class is templated on the input sample type. Two instantiations are
+     * provided: \ref cyber_waterfall_sink_c (complex) and \ref
+     * cyber_waterfall_sink_f (float). GRC users pick the type from the block's
+     * "Input Type" dropdown.
      */
+    template <typename T>
     class CYBERETHER_API cyber_waterfall_sink : virtual public gr::sync_block
     {
      public:
-      typedef std::shared_ptr<cyber_waterfall_sink> sptr;
+      typedef std::shared_ptr<cyber_waterfall_sink<T>> sptr;
 
       /*!
        * \param fft_size  samples per FFT frame (and width of the waterfall).
@@ -39,6 +45,9 @@ namespace gr {
                        const std::string& name = "waterfall",
                        int height = 512);
     };
+
+    typedef cyber_waterfall_sink<gr_complex> cyber_waterfall_sink_c;
+    typedef cyber_waterfall_sink<float>      cyber_waterfall_sink_f;
 
   } // namespace cyberether
 } // namespace gr

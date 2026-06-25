@@ -14,14 +14,15 @@
 namespace gr {
   namespace cyberether {
 
-    class cyber_waterfall_sink_impl : public cyber_waterfall_sink
+    template <typename T>
+    class cyber_waterfall_sink_impl : public cyber_waterfall_sink<T>
     {
      private:
          const uint64_t    d_fft_size;    // samples per row (FFT length)
          const int         d_height;      // PlotConfig "height" option
          const std::string d_name;
          uint64_t          d_write_ptr;   // rolling write head into d_tensor
-         Jetstream::Tensor d_tensor;      // CF32, shape {1, fft_size}
+         Jetstream::Tensor d_tensor;      // always CF32, shape {1, fft_size}
 
      public:
       cyber_waterfall_sink_impl(size_t fft_size, const std::string& name, int height);

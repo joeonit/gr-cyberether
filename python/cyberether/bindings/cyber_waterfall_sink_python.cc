@@ -14,7 +14,7 @@
 /* BINDTOOL_GEN_AUTOMATIC(0)                                                       */
 /* BINDTOOL_USE_PYGCCXML(0)                                                        */
 /* BINDTOOL_HEADER_FILE(cyber_waterfall_sink.h)                                        */
-/* BINDTOOL_HEADER_FILE_HASH(fc0940c5d2152eefc6fea12010a89fd1)                     */
+/* BINDTOOL_HEADER_FILE_HASH(1d5c8e7b398e576d670295be565ae212)                     */
 /***********************************************************************************/
 
 #include <pybind11/complex.h>
@@ -25,14 +25,20 @@ namespace py = pybind11;
 
 #include <gnuradio/cyberether/cyber_waterfall_sink.h>
 
-void bind_cyber_waterfall_sink(py::module& m)
+template <typename T>
+static void bind_one(py::module& m, const char* name)
 {
-    using cyber_waterfall_sink = gr::cyberether::cyber_waterfall_sink;
-
-    py::class_<cyber_waterfall_sink, gr::sync_block, gr::block, gr::basic_block,
-               std::shared_ptr<cyber_waterfall_sink>>(m, "cyber_waterfall_sink")
-        .def(py::init(&cyber_waterfall_sink::make),
+    using sink = gr::cyberether::cyber_waterfall_sink<T>;
+    py::class_<sink, gr::sync_block, gr::block, gr::basic_block,
+               std::shared_ptr<sink>>(m, name)
+        .def(py::init(&sink::make),
              py::arg("fft_size") = 1024,
              py::arg("name")     = "waterfall",
              py::arg("height")   = 512);
+}
+
+void bind_cyber_waterfall_sink(py::module& m)
+{
+    bind_one<gr_complex>(m, "cyber_waterfall_sink_c");
+    bind_one<float>     (m, "cyber_waterfall_sink_f");
 }

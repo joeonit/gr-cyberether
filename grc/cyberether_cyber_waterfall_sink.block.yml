@@ -3,6 +3,16 @@ label: CyberEther Waterfall Sink
 category: '[cyberether]'
 
 parameters:
+- id: type
+  label: Input Type
+  dtype: enum
+  options: [complex, float]
+  option_labels: [Complex, Float]
+  option_attributes:
+    fcn:     [cyber_waterfall_sink_c, cyber_waterfall_sink_f]
+    in_type: [complex,                float]
+  hide: part
+
 - id: name
   label: Plot Name
   dtype: string
@@ -19,10 +29,10 @@ parameters:
 inputs:
 - label: in
   domain: stream
-  dtype: complex
+  dtype: ${type.in_type}
 
 templates:
   imports: from gnuradio import cyberether
-  make: cyberether.cyber_waterfall_sink(${fft_size}, ${name}, ${height})
+  make: cyberether.${type.fcn}(${fft_size}, ${name}, ${height})
 
 file_format: 1
