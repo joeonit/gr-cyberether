@@ -21,15 +21,13 @@ namespace gr {
          const uint64_t    d_fft_size;    // samples per row (FFT length)
          const int         d_height;      // PlotConfig "height" option
          const std::string d_name;
-         const Jetstream::Superluminal::Operation d_operation;
-         const Jetstream::Superluminal::Domain    d_display;
+         const Jetstream::Superluminal::Domain d_display;
          uint64_t          d_write_ptr;   // rolling write head into d_tensor
          Jetstream::Tensor d_tensor;      // always CF32, shape {1, fft_size}
 
      public:
       cyber_waterfall_sink_impl(size_t fft_size, const std::string& name,
                                 int height,
-                                Jetstream::Superluminal::Operation operation,
                                 Jetstream::Superluminal::Domain display);
       ~cyber_waterfall_sink_impl() override;
 

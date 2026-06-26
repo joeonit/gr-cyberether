@@ -29,25 +29,22 @@ namespace gr {
     template <typename T>
     typename cyber_lineplot_sink<T>::sptr
     cyber_lineplot_sink<T>::make(size_t buffer_size, const std::string& name,
-                                  Superluminal::Domain display,
-                                  Superluminal::Operation operation)
+                                  Superluminal::Domain display)
     {
       return gnuradio::make_block_sptr<cyber_lineplot_sink_impl<T>>(
-          buffer_size, name, display, operation);
+          buffer_size, name, display);
     }
 
     template <typename T>
     cyber_lineplot_sink_impl<T>::cyber_lineplot_sink_impl(
         size_t buffer_size, const std::string& name,
-        Superluminal::Domain display,
-        Superluminal::Operation operation)
+        Superluminal::Domain display)
       : gr::sync_block(block_name<T>(),
               gr::io_signature::make(1, 1, sizeof(T)),
               gr::io_signature::make(0, 0, 0)),
       d_buffer_size(buffer_size == 0 ? 1 : buffer_size),
       d_name(name),
       d_display(display),
-      d_operation(operation),
       d_display_write_ptr(0),
       d_tensor(DeviceType::CPU, TypeToDataType<CF32>(),
                {1, static_cast<U64>(d_buffer_size)})
@@ -76,7 +73,9 @@ namespace gr {
           .type      = Superluminal::Type::Line,
           .source    = Superluminal::Domain::Time,        // always feed time samples
           .display   = d_display,                          // user choice (Time / Frequency)
-          .operation = d_operation,                        // user choice (Real / Amplitude / ...)
+          // operation is hardcoded — Superluminal's line builder ignores it
+          // and renders |z| regardless. Set to Amplitude to match.
+          .operation = Superluminal::Operation::Amplitude,
       };
       cyber_context::instance().register_plot({ this, d_name, config });
 

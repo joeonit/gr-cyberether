@@ -41,18 +41,12 @@ namespace gr {
        * \param name      display name shown in the window.
        * \param height    history depth in rows (passed to Superluminal as the
        *                  waterfall module's "height" option). Defaults to 512.
-       * \param operation how to reduce the complex FFT output to a scalar for
-       *                  display. Amplitude (default) shows |FFT|; Phase shows
-       *                  arg(FFT); Real/Imaginary show the respective
-       *                  components. Largely ignored for float input.
        * \param display   Frequency (default — spectrum waterfall) or Time
        *                  (time-amplitude strip; no FFT).
        */
       static sptr make(size_t fft_size = 1024,
                        const std::string& name = "waterfall",
                        int height = 512,
-                       Jetstream::Superluminal::Operation operation =
-                           Jetstream::Superluminal::Operation::Amplitude,
                        Jetstream::Superluminal::Domain display =
                            Jetstream::Superluminal::Domain::Frequency);
     };

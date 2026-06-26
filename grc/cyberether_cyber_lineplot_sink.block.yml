@@ -30,13 +30,6 @@ parameters:
   options: [Time, Frequency]
   option_labels: [Time (scope), Frequency (spectrum)]
 
-- id: operation
-  label: Operation
-  dtype: enum
-  default: Real
-  options: [Real, Imaginary, Amplitude, Phase]
-  option_labels: [Real, Imaginary, Amplitude, Phase]
-
 inputs:
 - label: in
   domain: stream
@@ -44,6 +37,6 @@ inputs:
 
 templates:
   imports: from gnuradio import cyberether
-  make: cyberether.${type.fcn}(${buffer_size}, ${name}, cyberether.Domain.${display}, cyberether.Operation.${operation})
+  make: cyberether.${type.fcn}(${buffer_size}, ${name}, cyberether.Domain.${display})
 
 file_format: 1

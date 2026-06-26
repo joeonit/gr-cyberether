@@ -14,7 +14,7 @@
 /* BINDTOOL_GEN_AUTOMATIC(0)                                                       */
 /* BINDTOOL_USE_PYGCCXML(0)                                                        */
 /* BINDTOOL_HEADER_FILE(cyber_waterfall_sink.h)                                        */
-/* BINDTOOL_HEADER_FILE_HASH(91254039774674d2b03d04cb419ac84c)                     */
+/* BINDTOOL_HEADER_FILE_HASH(8d569bfaf38aa4de5bfef984fbf5d36d)                     */
 /***********************************************************************************/
 
 #include <pybind11/complex.h>
@@ -36,7 +36,6 @@ static void bind_one(py::module& m, const char* name)
              py::arg("fft_size")  = 1024,
              py::arg("name")      = "waterfall",
              py::arg("height")    = 512,
-             py::arg("operation") = Jetstream::Superluminal::Operation::Amplitude,
              py::arg("display")   = Jetstream::Superluminal::Domain::Frequency);
 }
 

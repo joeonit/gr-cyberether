@@ -28,17 +28,15 @@ namespace gr {
     typename cyber_waterfall_sink<T>::sptr
     cyber_waterfall_sink<T>::make(size_t fft_size, const std::string& name,
                                    int height,
-                                   Superluminal::Operation operation,
                                    Superluminal::Domain display)
     {
       return gnuradio::make_block_sptr<cyber_waterfall_sink_impl<T>>(
-          fft_size, name, height, operation, display);
+          fft_size, name, height, display);
     }
 
     template <typename T>
     cyber_waterfall_sink_impl<T>::cyber_waterfall_sink_impl(
         size_t fft_size, const std::string& name, int height,
-        Superluminal::Operation operation,
         Superluminal::Domain display)
       : gr::sync_block(block_name<T>(),
               gr::io_signature::make(1, 1, sizeof(T)),
@@ -46,7 +44,6 @@ namespace gr {
       d_fft_size(fft_size == 0 ? 1 : fft_size),
       d_height(height <= 0 ? 512 : height),
       d_name(name),
-      d_operation(operation),
       d_display(display),
       d_write_ptr(0),
       d_tensor(DeviceType::CPU, TypeToDataType<CF32>(),
@@ -75,7 +72,9 @@ namespace gr {
           .type      = Superluminal::Type::Waterfall,
           .source    = Superluminal::Domain::Time,        // we always feed time samples
           .display   = d_display,                          // user choice (Frequency default)
-          .operation = d_operation,
+          // operation hardcoded — Superluminal's waterfall builder ignores
+          // it and renders |z| regardless. Set to Amplitude to match.
+          .operation = Superluminal::Operation::Amplitude,
       };
       config.options["height"] = static_cast<I32>(d_height);
       cyber_context::instance().register_plot({ this, d_name, config });

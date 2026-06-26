@@ -26,13 +26,6 @@ parameters:
   dtype: int
   default: '512'
 
-- id: operation
-  label: Operation
-  dtype: enum
-  default: Amplitude
-  options: [Amplitude, Phase, Real, Imaginary]
-  option_labels: [Amplitude, Phase, Real, Imaginary]
-
 - id: display
   label: Display Domain
   dtype: enum
@@ -47,6 +40,6 @@ inputs:
 
 templates:
   imports: from gnuradio import cyberether
-  make: cyberether.${type.fcn}(${fft_size}, ${name}, ${height}, cyberether.Operation.${operation}, cyberether.Domain.${display})
+  make: cyberether.${type.fcn}(${fft_size}, ${name}, ${height}, cyberether.Domain.${display})
 
 file_format: 1

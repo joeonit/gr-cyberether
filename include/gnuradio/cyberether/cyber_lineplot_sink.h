@@ -40,17 +40,11 @@ namespace gr {
        * \param name         display name shown in the window.
        * \param display      Time (scope view, default) or Frequency
        *                     (spectrum line — Superluminal inserts the FFT).
-       * \param operation    how to reduce a complex value to a scalar for
-       *                     display. Real (default) is correct for Time
-       *                     display; Amplitude is the right pick for Frequency
-       *                     display (= |FFT|, the spectrum magnitude).
        */
       static sptr make(size_t buffer_size = 4096,
                        const std::string& name = "lineplot",
                        Jetstream::Superluminal::Domain display =
-                           Jetstream::Superluminal::Domain::Time,
-                       Jetstream::Superluminal::Operation operation =
-                           Jetstream::Superluminal::Operation::Real);
+                           Jetstream::Superluminal::Domain::Time);
     };
 
     typedef cyber_lineplot_sink<gr_complex> cyber_lineplot_sink_c;
