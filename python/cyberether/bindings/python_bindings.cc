@@ -53,9 +53,12 @@ PYBIND11_MODULE(cyberether_python, m)
     // Please do not delete
     /**************************************/
     // BINDING_FUNCTION_CALLS(
+    // bind_cyber_context registers the Superluminal enums (DeviceType,
+    // Operation, Domain) — must run BEFORE any sink binding that uses them
+    // as default argument values.
+    bind_cyber_context(m);
     bind_cyber_null_sink(m);
     bind_cyber_lineplot_sink(m);
-    bind_cyber_context(m);
     bind_cyber_waterfall_sink(m);
     // ) END BINDING_FUNCTION_CALLS
 }
