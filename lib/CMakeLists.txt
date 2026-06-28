@@ -12,7 +12,6 @@
 include(GrPlatform) #define LIB_SUFFIX
 
 list(APPEND cyberether_sources
-    cyber_null_sink_impl.cc
     cyber_lineplot_sink_impl.cc
     cyber_context.cc
     cyber_waterfall_sink_impl.cc)

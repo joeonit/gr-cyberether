@@ -10,7 +10,6 @@
 # Install public header files
 ########################################################################
 install(FILES api.h
-    cyber_null_sink.h
     cyber_lineplot_sink.h
     cyber_context.h
     cyber_waterfall_sink.h DESTINATION include/gnuradio/cyberether)

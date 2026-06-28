@@ -25,7 +25,6 @@ include(GrPybind)
 ########################################################################
 
 list(APPEND cyberether_python_files
-    cyber_null_sink_python.cc
     cyber_lineplot_sink_python.cc
     cyber_context_python.cc
     cyber_waterfall_sink_python.cc python_bindings.cc)
