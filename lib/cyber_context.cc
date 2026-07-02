@@ -58,19 +58,17 @@ namespace gr {
           return;
       }
 
-      // Initialize Superluminal with the caller-chosen renderer device. Must
-      // happen BEFORE the first Plot() — otherwise Plot() lazily initialises
-      // with default config and our device choice is ignored.
-      Superluminal::InstanceConfig config;
-      config.device = device;
-      if (Superluminal::Initialize(config) != Result::SUCCESS) {
-          JST_FATAL("[gr-cyberether] Superluminal::Initialize failed.");
-          d_started.store(false, std::memory_order_release);
-          return;
-      }
+      // Release d_started on every exit path (early error returns included) so
+      // a failed present() never locks the context out of the next call.
+      struct started_guard {
+          std::atomic<bool>& flag;
+          ~started_guard() { flag.store(false, std::memory_order_release); }
+      } guard{d_started};
 
       // Snapshot the registered plots: present() blocks for the whole lifetime
-      // of the window, so we must not hold the lock across it.
+      // of the window, so we must not hold the lock across it. Checked before
+      // Initialize() so an empty registry doesn't leave Superluminal
+      // initialized with nothing to show.
       std::vector<plot_request> plots;
       {
           std::lock_guard<std::mutex> lock(d_mutex);
@@ -80,6 +78,16 @@ namespace gr {
       if (plots.empty()) {
           JST_WARN("[gr-cyberether] present() called but no CyberEther sinks are "
                    "registered; nothing to show.");
+          return;
+      }
+
+      // Initialize Superluminal with the caller-chosen renderer device. Must
+      // happen BEFORE the first Plot() — otherwise Plot() lazily initialises
+      // with default config and our device choice is ignored.
+      Superluminal::InstanceConfig config;
+      config.device = device;
+      if (Superluminal::Initialize(config) != Result::SUCCESS) {
+          JST_FATAL("[gr-cyberether] Superluminal::Initialize failed.");
           return;
       }
 
@@ -125,7 +133,6 @@ namespace gr {
       try {
           if (Superluminal::Start() != Result::SUCCESS) {
               JST_FATAL("[gr-cyberether] Superluminal::Start failed.");
-              d_started.store(false, std::memory_order_release);
               Superluminal::Terminate();
               return;
           }
@@ -151,11 +158,10 @@ namespace gr {
           update_thread.join();
       }
 
-      d_started.store(false, std::memory_order_release);
-
       // Stop()/Terminate() are safe even if Start() failed (they no-op when not
       // running / not initialized), so the instance is always torn down here
-      // never left initialized to crash at process exit.
+      // never left initialized to crash at process exit. d_started is released
+      // by started_guard only after teardown completes.
       Superluminal::Stop();
       Superluminal::Terminate();
     }
