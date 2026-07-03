@@ -33,6 +33,12 @@ parameters:
   options: [Frequency, Time]
   option_labels: [Frequency (spectrum), Time (amplitude strip)]
 
+- id: gui_hint
+  label: GUI Hint
+  dtype: string
+  default: '""'
+  hide: part
+
 inputs:
 - label: in
   domain: stream
@@ -40,6 +46,13 @@ inputs:
 
 templates:
   imports: from gnuradio import cyberether
-  make: cyberether.${type.fcn}(${fft_size}, ${name}, ${height}, cyberether.Domain.${display})
+  make: cyberether.${type.fcn}(${fft_size}, ${name}, ${height}, cyberether.Domain.${display}, ${gui_hint})
+
+documentation: |-
+  GUI Hint places this plot in the shared CyberEther window grid,
+  qtgui-style: "row, col" or "row, col, row_span, col_span" (zero-based
+  cells). Leave empty to auto-place in a near-square grid. Example: a
+  waterfall with hint "0, 0, 1, 2" spans the top row while two unhinted
+  scopes fill the row below.
 
 file_format: 1

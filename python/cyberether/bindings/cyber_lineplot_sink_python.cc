@@ -14,7 +14,7 @@
 /* BINDTOOL_GEN_AUTOMATIC(0)                                                       */
 /* BINDTOOL_USE_PYGCCXML(0)                                                        */
 /* BINDTOOL_HEADER_FILE(cyber_lineplot_sink.h)                                        */
-/* BINDTOOL_HEADER_FILE_HASH(99dac00369c4e2a136619a8a49b85b9f)                     */
+/* BINDTOOL_HEADER_FILE_HASH(106837c64181631256e4fb4059901405)                     */
 /***********************************************************************************/
 
 #include <pybind11/complex.h>
@@ -35,7 +35,8 @@ static void bind_one(py::module& m, const char* name)
         .def(py::init(&sink::make),
              py::arg("buffer_size") = 4096,
              py::arg("name")        = "lineplot",
-             py::arg("display")     = Jetstream::Superluminal::Domain::Time);
+             py::arg("display")     = Jetstream::Superluminal::Domain::Time,
+             py::arg("gui_hint")    = "");
 }
 
 void bind_cyber_lineplot_sink(py::module& m)
