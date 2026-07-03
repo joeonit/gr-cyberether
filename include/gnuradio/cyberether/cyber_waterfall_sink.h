@@ -43,12 +43,16 @@ namespace gr {
        *                  waterfall module's "height" option). Defaults to 512.
        * \param display   Frequency (default — spectrum waterfall) or Time
        *                  (time-amplitude strip; no FFT).
+       * \param gui_hint  optional placement in the shared plot grid,
+       *                  qtgui-style "row, col[, row_span, col_span]"
+       *                  (zero-based cells). Empty (default) auto-places.
        */
       static sptr make(size_t fft_size = 1024,
                        const std::string& name = "waterfall",
                        int height = 512,
                        Jetstream::Superluminal::Domain display =
-                           Jetstream::Superluminal::Domain::Frequency);
+                           Jetstream::Superluminal::Domain::Frequency,
+                       const std::string& gui_hint = "");
     };
 
     typedef cyber_waterfall_sink<gr_complex> cyber_waterfall_sink_c;

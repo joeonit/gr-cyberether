@@ -28,16 +28,17 @@ namespace gr {
     typename cyber_waterfall_sink<T>::sptr
     cyber_waterfall_sink<T>::make(size_t fft_size, const std::string& name,
                                    int height,
-                                   Superluminal::Domain display)
+                                   Superluminal::Domain display,
+                                   const std::string& gui_hint)
     {
       return gnuradio::make_block_sptr<cyber_waterfall_sink_impl<T>>(
-          fft_size, name, height, display);
+          fft_size, name, height, display, gui_hint);
     }
 
     template <typename T>
     cyber_waterfall_sink_impl<T>::cyber_waterfall_sink_impl(
         size_t fft_size, const std::string& name, int height,
-        Superluminal::Domain display)
+        Superluminal::Domain display, const std::string& gui_hint)
       : gr::sync_block(block_name<T>(),
               gr::io_signature::make(1, 1, sizeof(T)),
               gr::io_signature::make(0, 0, 0)),
@@ -45,6 +46,7 @@ namespace gr {
       d_height(height <= 0 ? 512 : height),
       d_name(name),
       d_display(display),
+      d_gui_hint(gui_hint),
       d_write_ptr(0),
       d_tensor(DeviceType::CPU, TypeToDataType<CF32>(),
                {1, static_cast<U64>(d_fft_size)})
@@ -77,7 +79,7 @@ namespace gr {
           .operation = Superluminal::Operation::Amplitude,
       };
       config.options["height"] = static_cast<I32>(d_height);
-      cyber_context::instance().register_plot({ this, d_name, config });
+      cyber_context::instance().register_plot({ this, d_name, config, d_gui_hint });
       return sync_block::start();
     }
 

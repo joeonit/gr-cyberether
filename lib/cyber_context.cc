@@ -6,12 +6,12 @@
  */
 
 #include <gnuradio/cyberether/cyber_context.h>
+#include "mosaic_layout.h"
 #include <jetstream/logger.hh>
 
 #include <algorithm>
 #include <atomic>
 #include <chrono>
-#include <cmath>
 #include <string>
 #include <thread>
 #include <unordered_set>
@@ -91,19 +91,29 @@ namespace gr {
           return;
       }
 
-      // square grid: cols = ceil(sqrt(n)), rows = ceil(n / cols).
-      //   1 -> 1x1   2 -> 1x2   3,4 -> 2x2   5,6 -> 2x3   ...
-      const std::size_t n    = plots.size();
-      const U8          cols = static_cast<U8>(std::ceil(std::sqrt(static_cast<double>(n))));
-      const U8          rows = static_cast<U8>((n + cols - 1) / cols);
-
+      // Translate per-sink GUI hints into the shared grid. Hinted sinks get
+      // exactly the cells they asked for; the rest auto-fill (near-square
+      // when nothing is hinted). Bad hints degrade to auto placement with a
+      // warning, never to failure.
+      const std::size_t n = plots.size();
+      std::vector<std::string> hints;
+      hints.reserve(n);
+      for (const auto& p : plots) {
+          hints.push_back(p.gui_hint);
+      }
+      const layout_result layout = compute_layout(hints);
+      for (const auto& warning : layout.warnings) {
+          JST_WARN("[gr-cyberether] {}", warning);
+      }
 
       std::unordered_set<std::string> used_names;
 
       for (std::size_t i = 0; i < n; ++i) {
-          const U8 row = static_cast<U8>(i / cols);
-          const U8 col = static_cast<U8>(i % cols);
-          const auto mosaic = Superluminal::MosaicLayout(rows, cols, 1, 1, col, row);
+          const panel_rect& cell = layout.panels[i];
+          const auto mosaic = Superluminal::MosaicLayout(
+              static_cast<U8>(layout.rows),   static_cast<U8>(layout.cols),
+              static_cast<U8>(cell.row_span), static_cast<U8>(cell.col_span),
+              static_cast<U8>(cell.col),      static_cast<U8>(cell.row));
 
           std::string name = plots[i].name;
           if (!used_names.insert(name).second) {
@@ -122,7 +132,8 @@ namespace gr {
           }
       }
 
-      JST_INFO("[gr-cyberether] Presenting {} plot(s) in a {}x{} grid.", n, rows, cols);
+      JST_INFO("[gr-cyberether] Presenting {} plot(s) in a {}x{} grid.",
+               n, layout.rows, layout.cols);
 
       // Drive Superluminal::compute() at display cadence on a single background
       // thread, matching Superluminal::Show(). Sinks only write their tensors

@@ -40,11 +40,15 @@ namespace gr {
        * \param name         display name shown in the window.
        * \param display      Time (scope view, default) or Frequency
        *                     (spectrum line — Superluminal inserts the FFT).
+       * \param gui_hint     optional placement in the shared plot grid,
+       *                     qtgui-style "row, col[, row_span, col_span]"
+       *                     (zero-based cells). Empty (default) auto-places.
        */
       static sptr make(size_t buffer_size = 4096,
                        const std::string& name = "lineplot",
                        Jetstream::Superluminal::Domain display =
-                           Jetstream::Superluminal::Domain::Time);
+                           Jetstream::Superluminal::Domain::Time,
+                       const std::string& gui_hint = "");
     };
 
     typedef cyber_lineplot_sink<gr_complex> cyber_lineplot_sink_c;

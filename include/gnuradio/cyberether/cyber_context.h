@@ -35,6 +35,8 @@ namespace gr {
         const void* owner;
         std::string name;
         Jetstream::Superluminal::PlotConfig config;
+        //! qtgui-style placement "row, col[, row_span, col_span]"; empty = auto.
+        std::string gui_hint;
       };
 
       static cyber_context& instance();

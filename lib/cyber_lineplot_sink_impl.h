@@ -22,13 +22,15 @@ namespace gr {
          const uint64_t    d_buffer_size;
          const std::string d_name;
          const Jetstream::Superluminal::Domain d_display;
+         const std::string d_gui_hint;            // "row, col[, spans]"; empty = auto
          uint64_t          d_display_write_ptr;   // rolling write head into d_tensor
          Jetstream::Tensor d_tensor;              // display buffer, always CF32, shape {1, N};
                                                   // written by work(), read in place by Superluminal
 
      public:
       cyber_lineplot_sink_impl(size_t buffer_size, const std::string& name,
-                               Jetstream::Superluminal::Domain display);
+                               Jetstream::Superluminal::Domain display,
+                               const std::string& gui_hint);
       ~cyber_lineplot_sink_impl() override;
 
       bool start() override;             // GR lifecycle: register plot with the context
