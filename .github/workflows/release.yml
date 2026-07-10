@@ -1,0 +1,109 @@
+name: release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  CYBERETHER_REF: "v1.4.0"
+
+jobs:
+  release:
+    name: ${{ matrix.artifact }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-24.04
+            artifact: gr-cyberether-linux-x86_64
+          - os: macos-14
+            artifact: gr-cyberether-macos-arm64
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential cmake pkg-config git ninja-build patchelf \
+            libboost-all-dev gnuradio-dev \
+            glslang-tools spirv-cross python3-pip
+          pip3 install --break-system-packages "meson>=1.11" PyYAML numpy mapbox_earcut
+
+      - name: Install dependencies (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          brew install cmake ninja pkg-config gnuradio glslang spirv-cross pybind11
+          pip3 install --break-system-packages "meson>=1.11" PyYAML numpy mapbox_earcut
+
+      - name: Cache CyberEther
+        id: ce-cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ github.workspace }}/.ce-prefix
+          key: cyberether-release-${{ env.CYBERETHER_REF }}-${{ runner.os }}-v1
+
+      - name: Build CyberEther
+        if: steps.ce-cache.outputs.cache-hit != 'true'
+        run: |
+          git clone --depth 1 --branch "$CYBERETHER_REF" \
+            https://github.com/luigifcruz/CyberEther.git ce-src
+          meson setup ce-src ce-build \
+            --prefix="${{ github.workspace }}/.ce-prefix" \
+            --buildtype=release \
+            -Dpython=false -Dtests=false -Dexamples=false
+          meson compile -C ce-build
+          meson install -C ce-build
+
+      - name: Export CyberEther to pkg-config
+        run: |
+          CE_PREFIX="${{ github.workspace }}/.ce-prefix"
+          echo "PKG_CONFIG_PATH=${CE_PREFIX}/lib/pkgconfig:${CE_PREFIX}/lib/x86_64-linux-gnu/pkgconfig:$PKG_CONFIG_PATH" >> "$GITHUB_ENV"
+
+      - name: Build gr-cyberether
+        run: |
+          RPATH=$([[ "$RUNNER_OS" == "macOS" ]] && echo "@loader_path" || echo "\$ORIGIN")
+          PREFIX_PATH=$([[ "$RUNNER_OS" == "macOS" ]] && echo "-DCMAKE_PREFIX_PATH=$(brew --prefix)" || echo "")
+          cmake -B build \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}/dist" \
+            -DCMAKE_INSTALL_RPATH="$RPATH" \
+            $PREFIX_PATH \
+            -DENABLE_PYTHON=ON \
+            -DENABLE_DOXYGEN=OFF
+          cmake --build build -j$(nproc 2>/dev/null || sysctl -n hw.logicalcpu)
+          cmake --install build
+
+      - name: Bundle libjetstream
+        run: |
+          CE_PREFIX="${{ github.workspace }}/.ce-prefix"
+          DIST_LIB="${{ github.workspace }}/dist/lib"
+          if [[ "$RUNNER_OS" == "macOS" ]]; then
+            cp "$CE_PREFIX/lib"/libjetstream*.dylib "$DIST_LIB/"
+            for our_lib in "$DIST_LIB"/libgnuradio-cyberether*.dylib; do
+              old_ref=$(otool -L "$our_lib" | awk '/libjetstream/{print $1}')
+              [[ -n "$old_ref" ]] && install_name_tool -change "$old_ref" \
+                "@loader_path/libjetstream.dylib" "$our_lib"
+            done
+          else
+            # meson on Ubuntu installs to lib/x86_64-linux-gnu/, not lib/
+            CE_SO=$(find "$CE_PREFIX" -name "libjetstream.so" | head -1)
+            cp "${CE_SO}"* "$DIST_LIB/"
+            patchelf --set-rpath '$ORIGIN' "$DIST_LIB"/libgnuradio-cyberether.so
+          fi
+
+      - name: Package
+        run: tar -czf ${{ matrix.artifact }}.tar.gz -C ${{ github.workspace }}/dist .
+
+      - name: Upload to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ matrix.artifact }}.tar.gz
