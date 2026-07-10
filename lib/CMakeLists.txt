@@ -15,7 +15,8 @@ list(APPEND cyberether_sources
     cyber_lineplot_sink_impl.cc
     cyber_context.cc
     mosaic_layout.cc
-    cyber_waterfall_sink_impl.cc)
+    cyber_waterfall_sink_impl.cc
+    cyber_constellation_sink_impl.cc)
 
 set(cyberether_sources
     "${cyberether_sources}"
@@ -74,6 +75,7 @@ include(GrTest)
 # List all files that contain Boost.UTF unit tests here
 
 list(APPEND test_cyberether_sources
+qa_cyber_constellation_sink.cc
 # qa_cyber_waterfall_sink.cc  # empty stub; re-enable once the test has a body.
 )
 # Anything we need to link to for the unit tests go here
