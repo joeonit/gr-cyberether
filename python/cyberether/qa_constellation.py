@@ -105,7 +105,14 @@ class qa_constellation(gr_unittest.TestCase):
             self.tb.connect(src, snk)
         self.tb.run()
 
-    def test_007_start_stop_cycles(self):
+    def test_007_constellation_sink(self):
+        # QPSK through the constellation sink, hinted into a cell.
+        src = blocks.vector_source_c(qpsk_symbols(4096), repeat=False)
+        snk = cyberether.cyber_constellation_sink_c(1024, "qpsk const", "0, 1")
+        self.tb.connect(src, snk)
+        self.tb.run()
+
+    def test_008_start_stop_cycles(self):
         # start() registers the plot with cyber_context, stop() unregisters
         # it. Two full cycles of the same flowgraph exercise the
         # re-registration (replace-by-owner) path.

@@ -1,21 +1,24 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# Copyright 2026 Youssef.
+# Copyright 2026 Youssef Mahmoud.
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 #
 
-from gnuradio import gr, gr_unittest
-# from gnuradio import blocks
+import numpy as np
+
+from gnuradio import gr, gr_unittest, blocks
+
 try:
-    from gnuradio.cyberether import cyber_constellation_sink
+    from gnuradio import cyberether
 except ImportError:
     import os
     import sys
     dirname, filename = os.path.split(os.path.abspath(__file__))
     sys.path.append(os.path.join(dirname, "bindings"))
-    from gnuradio.cyberether import cyber_constellation_sink
+    from gnuradio import cyberether
+
 
 class qa_cyber_constellation_sink(gr_unittest.TestCase):
 
@@ -26,13 +29,19 @@ class qa_cyber_constellation_sink(gr_unittest.TestCase):
         self.tb = None
 
     def test_instance(self):
-        # FIXME: Test will fail until you pass sensible arguments to the constructor
-        instance = cyber_constellation_sink()
+        instance = cyberether.cyber_constellation_sink_c(1024, "qa", "")
+        self.assertIsNotNone(instance)
 
-    def test_001_descriptive_test_name(self):
-        # set up fg
+    def test_001_qpsk_run(self):
+        # A finite QPSK burst must run to completion; the sink always
+        # consumes everything and never back-pressures.
+        rng = np.random.default_rng(1234)
+        points = np.array([1+1j, 1-1j, -1+1j, -1-1j], dtype=np.complex64) / np.sqrt(2)
+        symbols = rng.choice(points, size=4096).tolist()
+        src = blocks.vector_source_c(symbols, repeat=False)
+        snk = cyberether.cyber_constellation_sink_c(1024, "qpsk", "0, 0")
+        self.tb.connect(src, snk)
         self.tb.run()
-        # check data
 
 
 if __name__ == '__main__':
