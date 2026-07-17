@@ -1,0 +1,227 @@
+options:
+  parameters:
+    alias: ''
+    author: ''
+    catch_exceptions: 'True'
+    comment: ''
+    copyright: ''
+    description: Noisy QPSK into every gr-cyberether sink type, arranged in one window
+      with GUI hints; the constellation spans the left column.
+    device: Auto
+    gen_linking: dynamic
+    generate_options: cyberether_gui
+    generator_class_name: CyberetherStandaloneGuiGenerator
+    generator_module: gnuradio.cyberether.workflows.cyberether_standalone_gui
+    hier_block_src_path: '.:'
+    id: constellation_demo
+    max_nouts: '0'
+    output_language: python
+    realtime_scheduling: ''
+    run: 'True'
+    run_command: '{python} -u {filename}'
+    thread_safe_setters: ''
+    title: CyberEther constellation demo
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [8, 8]
+    rotation: 0
+    state: enabled
+
+blocks:
+- name: samp_rate
+  id: variable
+  parameters:
+    comment: ''
+    value: '256000'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [200, 12]
+    rotation: 0
+    state: enabled
+- name: analog_noise_source_x_0
+  id: analog_noise_source_x
+  parameters:
+    affinity: ''
+    alias: ''
+    amp: '0.08'
+    comment: ''
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    noise_type: analog.GR_GAUSSIAN
+    seed: '42'
+    type: complex
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [456, 288]
+    rotation: 0
+    state: enabled
+- name: analog_random_source_x_0
+  id: analog_random_source_x
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: ''
+    max: '4'
+    maxoutbuf: '0'
+    min: '0'
+    minoutbuf: '0'
+    num_samps: '65536'
+    repeat: 'True'
+    type: byte
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [40, 156]
+    rotation: 0
+    state: enabled
+- name: blocks_add_xx_0
+  id: blocks_add_xx
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: ''
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    num_inputs: '2'
+    type: complex
+    vlen: '1'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [664, 200]
+    rotation: 0
+    state: enabled
+- name: blocks_throttle2_0
+  id: blocks_throttle2
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: ''
+    ignoretag: 'True'
+    limit: auto
+    maximum: '0.1'
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    samples_per_second: samp_rate
+    type: complex
+    vlen: '1'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [456, 168]
+    rotation: 0
+    state: enabled
+- name: cyberether_cyber_constellation_sink_0
+  id: cyberether_cyber_constellation_sink
+  parameters:
+    affinity: ''
+    alias: ''
+    buffer_size: '2048'
+    comment: Spans both rows of the left column.
+    gui_hint: '"0, 0, 2, 1"'
+    name: '"QPSK constellation"'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [880, 76]
+    rotation: 0
+    state: enabled
+- name: cyberether_cyber_lineplot_sink_0
+  id: cyberether_cyber_lineplot_sink
+  parameters:
+    affinity: ''
+    alias: ''
+    buffer_size: '4096'
+    comment: ''
+    display: Time
+    gui_hint: '"0, 1"'
+    name: '"scope"'
+    type: complex
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [880, 188]
+    rotation: 0
+    state: enabled
+- name: cyberether_cyber_lineplot_sink_1
+  id: cyberether_cyber_lineplot_sink
+  parameters:
+    affinity: ''
+    alias: ''
+    buffer_size: '4096'
+    comment: ''
+    display: Frequency
+    gui_hint: '"0, 2"'
+    name: '"spectrum line"'
+    type: complex
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [880, 300]
+    rotation: 0
+    state: enabled
+- name: cyberether_cyber_waterfall_sink_0
+  id: cyberether_cyber_waterfall_sink
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: Spans the bottom-right two cells.
+    display: Frequency
+    fft_size: '1024'
+    gui_hint: '"1, 1, 1, 2"'
+    height: '256'
+    name: '"waterfall"'
+    type: complex
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [880, 412]
+    rotation: 0
+    state: enabled
+- name: digital_chunks_to_symbols_xx_0
+  id: digital_chunks_to_symbols_xx
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: ''
+    dimension: '1'
+    in_type: byte
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    num_ports: '1'
+    out_type: complex
+    symbol_table: '[0.707+0.707j, -0.707+0.707j, -0.707-0.707j, 0.707-0.707j]'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [240, 156]
+    rotation: 0
+    state: enabled
+
+connections:
+- [analog_noise_source_x_0, '0', blocks_add_xx_0, '1']
+- [analog_random_source_x_0, '0', digital_chunks_to_symbols_xx_0, '0']
+- [blocks_add_xx_0, '0', cyberether_cyber_constellation_sink_0, '0']
+- [blocks_add_xx_0, '0', cyberether_cyber_lineplot_sink_0, '0']
+- [blocks_add_xx_0, '0', cyberether_cyber_lineplot_sink_1, '0']
+- [blocks_add_xx_0, '0', cyberether_cyber_waterfall_sink_0, '0']
+- [blocks_throttle2_0, '0', blocks_add_xx_0, '0']
+- [digital_chunks_to_symbols_xx_0, '0', blocks_throttle2_0, '0']
+
+metadata:
+  file_format: 1
+  grc_version: v3.11.0.0git-1100-gf06564b3
