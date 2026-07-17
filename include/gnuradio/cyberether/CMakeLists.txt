@@ -12,4 +12,5 @@
 install(FILES api.h
     cyber_lineplot_sink.h
     cyber_context.h
-    cyber_waterfall_sink.h DESTINATION include/gnuradio/cyberether)
+    cyber_waterfall_sink.h
+    cyber_constellation_sink.h DESTINATION include/gnuradio/cyberether)

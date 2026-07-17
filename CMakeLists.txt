@@ -44,6 +44,9 @@ set(Boost_NO_BOOST_CMAKE ON CACHE BOOL "Use CMake's FindBoost module")
 # Find gnuradio to get access to the cmake modules
 find_package(Gnuradio "3.10" REQUIRED)
 
+# Boost UTF for the C++ QA tests (gr_add_cpp_test links Boost::unit_test_framework)
+find_package(Boost REQUIRED COMPONENTS unit_test_framework)
+
 # Find CyberEther (Jetstream)
 # Currently the build requires a minimum version of 1.4.0 during the development
 

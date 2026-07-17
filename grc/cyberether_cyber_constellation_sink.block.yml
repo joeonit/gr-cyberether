@@ -1,0 +1,42 @@
+id: cyberether_cyber_constellation_sink
+label: CyberEther Constellation Sink
+category: '[cyberether]'
+
+parameters:
+- id: name
+  label: Plot Name
+  dtype: string
+  default: '"constellation"'
+
+- id: buffer_size
+  label: Buffer Size
+  dtype: int
+  default: '2048'
+
+- id: gui_hint
+  label: GUI Hint
+  dtype: string
+  default: '""'
+  hide: part
+
+inputs:
+- label: in
+  domain: stream
+  dtype: complex
+
+templates:
+  imports: from gnuradio import cyberether
+  make: cyberether.cyber_constellation_sink_c(${buffer_size}, ${name}, ${gui_hint})
+
+documentation: |-
+  IQ constellation (scatter) display: real -> X (In-Phase), imag -> Y
+  (Quadrature). Buffer Size is the number of points on screen.
+
+  Complex input only: a real signal has no quadrature component, so its
+  constellation degenerates to a line on the X axis.
+
+  GUI Hint places this plot in the shared CyberEther window grid,
+  qtgui-style: "row, col" or "row, col, row_span, col_span" (zero-based
+  cells). Leave empty to auto-place in a near-square grid.
+
+file_format: 1
