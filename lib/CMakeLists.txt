@@ -15,6 +15,7 @@ list(APPEND cyberether_sources
     cyber_lineplot_sink_impl.cc
     cyber_context.cc
     mosaic_layout.cc
+    cyber_range.cc
     cyber_waterfall_sink_impl.cc
     cyber_constellation_sink_impl.cc)
 

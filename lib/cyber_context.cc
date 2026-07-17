@@ -124,7 +124,9 @@ namespace gr {
                        "Give CyberEther sinks unique names.", original, name);
           }
 
-          const Result res = Superluminal::Plot(name, mosaic, plots[i].config);
+          const Result res = plots[i].interface
+              ? Superluminal::Interface(name, mosaic, plots[i].interface)
+              : Superluminal::Plot(name, mosaic, plots[i].config);
           if (res != Result::SUCCESS) {
               JST_FATAL("[gr-cyberether] Superluminal::Plot failed for '{}'.", name);
               Superluminal::Terminate();

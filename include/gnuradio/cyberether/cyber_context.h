@@ -12,6 +12,7 @@
 #include <jetstream/superluminal.hh>
 
 #include <atomic>
+#include <functional>
 #include <mutex>
 #include <string>
 #include <vector>
@@ -37,6 +38,9 @@ namespace gr {
         Jetstream::Superluminal::PlotConfig config;
         //! qtgui-style placement "row, col[, row_span, col_span]"; empty = auto.
         std::string gui_hint;
+        //! When set, the cell is an ImGui control panel (Superluminal::Interface)
+        //! instead of a plot; `config` is ignored. Runs on the present thread.
+        std::function<void()> interface;
       };
 
       static cyber_context& instance();
