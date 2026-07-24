@@ -27,6 +27,14 @@ namespace gr {
       return ctx;
     }
 
+    cyber_context::cyber_context()
+    {
+        // Globally disable Jetstream/CyberEther terminal color output.
+        // GNU Radio logs get corrupted by raw ANSI escape codes when running
+        // in headless or GUI environments (like GRC) that don't interpret them.
+        JST_LOG_COLOR(false);
+    }
+
     void
     cyber_context::register_plot(const plot_request& request)
     {

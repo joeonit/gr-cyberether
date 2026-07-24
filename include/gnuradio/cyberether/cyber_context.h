@@ -69,7 +69,7 @@ namespace gr {
       cyber_context& operator=(const cyber_context&) = delete;
 
     private:
-      cyber_context()  = default;
+      cyber_context();
       ~cyber_context() = default;
 
       mutable std::mutex        d_mutex;
