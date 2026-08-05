@@ -5,17 +5,20 @@
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 #
+# Headless: present() is never called here, so nothing in this file needs
+# a window. It only exercises construction and the work() data path.
 
-from gnuradio import gr, gr_unittest
-# from gnuradio import blocks
+from gnuradio import gr, gr_unittest, blocks
+
 try:
-    from gnuradio.cyberether import cyber_lineplot_sink
+    from gnuradio import cyberether
 except ImportError:
     import os
     import sys
     dirname, filename = os.path.split(os.path.abspath(__file__))
     sys.path.append(os.path.join(dirname, "bindings"))
-    from gnuradio.cyberether import cyber_lineplot_sink
+    from gnuradio import cyberether
+
 
 class qa_cyber_lineplot_sink(gr_unittest.TestCase):
 
@@ -26,13 +29,20 @@ class qa_cyber_lineplot_sink(gr_unittest.TestCase):
         self.tb = None
 
     def test_instance(self):
-        # FIXME: Test will fail until you pass sensible arguments to the constructor
-        instance = cyber_lineplot_sink()
+        instance = cyberether.cyber_lineplot_sink_c(1024, "qa")
+        self.assertIsNotNone(instance)
 
-    def test_001_descriptive_test_name(self):
-        # set up fg
+    def test_001_complex_run(self):
+        src = blocks.vector_source_c([1 + 1j] * 4096, repeat=False)
+        snk = cyberether.cyber_lineplot_sink_c(1024, "qa_complex")
+        self.tb.connect(src, snk)
         self.tb.run()
-        # check data
+
+    def test_002_float_run(self):
+        src = blocks.vector_source_f([0.5] * 4096, repeat=False)
+        snk = cyberether.cyber_lineplot_sink_f(1024, "qa_float")
+        self.tb.connect(src, snk)
+        self.tb.run()
 
 
 if __name__ == '__main__':
