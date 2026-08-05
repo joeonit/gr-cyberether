@@ -7,6 +7,7 @@ options:
     copyright: ''
     description: Cosine plus a little Gaussian noise into the CyberEther line plot
       sink, so the trace clearly moves frame to frame.
+    device: Metal
     gen_linking: dynamic
     generate_options: cyberether_gui
     generator_class_name: CyberetherStandaloneGuiGenerator
@@ -299,6 +300,7 @@ blocks:
     buffer_size: '1024'
     comment: ''
     name: '"one"'
+    type: complex
   states:
     bus_sink: false
     bus_source: false
@@ -314,6 +316,7 @@ blocks:
     buffer_size: '1024'
     comment: ''
     name: '"two"'
+    type: complex
   states:
     bus_sink: false
     bus_source: false
@@ -329,6 +332,7 @@ blocks:
     buffer_size: '2048'
     comment: ''
     name: three
+    type: complex
   states:
     bus_sink: false
     bus_source: false
@@ -344,6 +348,7 @@ blocks:
     buffer_size: '2048'
     comment: ''
     name: four
+    type: complex
   states:
     bus_sink: false
     bus_source: false
