@@ -43,9 +43,6 @@ class constellation_demo(gr.top_block):
         ##################################################
 
         self.digital_chunks_to_symbols_xx_0 = digital.chunks_to_symbols_bc([0.707+0.707j, -0.707+0.707j, -0.707-0.707j, 0.707-0.707j], 1)
-        self.cyberether_cyber_waterfall_sink_0 = cyberether.cyber_waterfall_sink_c(1024, "waterfall", 256, cyberether.Domain.Frequency, "1, 1, 1, 2")
-        self.cyberether_cyber_lineplot_sink_1 = cyberether.cyber_lineplot_sink_c(4096, "spectrum line", cyberether.Domain.Frequency, "0, 2")
-        self.cyberether_cyber_lineplot_sink_0 = cyberether.cyber_lineplot_sink_c(4096, "scope", cyberether.Domain.Time, "0, 1")
         self.cyberether_cyber_constellation_sink_0 = cyberether.cyber_constellation_sink_c(2048, "QPSK constellation", "0, 0, 2, 1")
         self.blocks_throttle2_0 = blocks.throttle( gr.sizeof_gr_complex*1, samp_rate, True, 0 if "auto" == "auto" else max( int(float(0.1) * samp_rate) if "auto" == "time" else int(0.1), 1) )
         self.blocks_add_xx_0 = blocks.add_vcc(1)
@@ -59,9 +56,6 @@ class constellation_demo(gr.top_block):
         self.connect((self.analog_noise_source_x_0, 0), (self.blocks_add_xx_0, 1))
         self.connect((self.analog_random_source_x_0, 0), (self.digital_chunks_to_symbols_xx_0, 0))
         self.connect((self.blocks_add_xx_0, 0), (self.cyberether_cyber_constellation_sink_0, 0))
-        self.connect((self.blocks_add_xx_0, 0), (self.cyberether_cyber_lineplot_sink_0, 0))
-        self.connect((self.blocks_add_xx_0, 0), (self.cyberether_cyber_lineplot_sink_1, 0))
-        self.connect((self.blocks_add_xx_0, 0), (self.cyberether_cyber_waterfall_sink_0, 0))
         self.connect((self.blocks_throttle2_0, 0), (self.blocks_add_xx_0, 0))
         self.connect((self.digital_chunks_to_symbols_xx_0, 0), (self.blocks_throttle2_0, 0))
 

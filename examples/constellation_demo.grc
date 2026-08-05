@@ -153,7 +153,7 @@ blocks:
     bus_structure: null
     coordinate: [880, 188]
     rotation: 0
-    state: enabled
+    state: disabled
 - name: cyberether_cyber_lineplot_sink_1
   id: cyberether_cyber_lineplot_sink
   parameters:
@@ -171,7 +171,7 @@ blocks:
     bus_structure: null
     coordinate: [880, 300]
     rotation: 0
-    state: enabled
+    state: disabled
 - name: cyberether_cyber_waterfall_sink_0
   id: cyberether_cyber_waterfall_sink
   parameters:
@@ -190,7 +190,7 @@ blocks:
     bus_structure: null
     coordinate: [880, 412]
     rotation: 0
-    state: enabled
+    state: disabled
 - name: digital_chunks_to_symbols_xx_0
   id: digital_chunks_to_symbols_xx
   parameters:
