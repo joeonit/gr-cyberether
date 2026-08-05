@@ -1,29 +1,24 @@
 options:
   parameters:
+    alias: ''
     author: Youssef Mahmoud
     catch_exceptions: 'True'
-    category: '[GRC Hier Blocks]'
-    cmake_opt: ''
     comment: ''
     copyright: ''
     description: Feed a cosine into the CyberEther line plot sink and present it.
-    gen_cmake: 'On'
     gen_linking: dynamic
     generate_options: cyberether_gui
+    generator_class_name: CyberetherStandaloneGuiGenerator
+    generator_module: gnuradio.cyberether.workflows.cyberether_standalone_gui
     hier_block_src_path: '.:'
     id: lineplot_demo
     max_nouts: '0'
     output_language: python
-    placement: (0,0)
-    qt_qss_theme: ''
     realtime_scheduling: ''
     run: 'True'
     run_command: '{python} -u {filename}'
-    run_options: prompt
-    sizing_mode: fixed
     thread_safe_setters: ''
     title: CyberEther Line Plot Demo
-    window_size: (1000,1000)
   states:
     bus_sink: false
     bus_source: false
@@ -86,7 +81,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [400, 320.0]
+    coordinate: [400, 264.0]
     rotation: 0
     state: enabled
 - name: cyberether_cyber_lineplot_sink_0
@@ -104,10 +99,11 @@ blocks:
     coordinate: [600, 264.0]
     rotation: 0
     state: enabled
+
 connections:
 - [analog_sig_source_x_0, '0', blocks_throttle2_0, '0']
 - [blocks_throttle2_0, '0', cyberether_cyber_lineplot_sink_0, '0']
 
 metadata:
   file_format: 1
-  grc_version: 3.10.12.0
+  grc_version: v3.11.0.0git-1100-gf06564b3

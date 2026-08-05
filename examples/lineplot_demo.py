@@ -8,12 +8,14 @@
 # Title: CyberEther Line Plot Demo
 # Author: Youssef Mahmoud
 # Description: Feed a cosine into the CyberEther line plot sink and present it.
-# GNU Radio version: 3.10.12.0
+# GNU Radio version: v3.11.0.0git-1100-gf06564b3
 
 from gnuradio import analog
 from gnuradio import blocks
 from gnuradio import cyberether
+import threading
 from gnuradio import gr
+from gnuradio import cyberether
 from gnuradio.filter import firdes
 from gnuradio.fft import window
 import sys
@@ -21,22 +23,14 @@ import signal
 from argparse import ArgumentParser
 from gnuradio.eng_arg import eng_float, intx
 from gnuradio import eng_notation
-import threading
 
 
-def snipfcn_snippet_present(self):
-    cyberether.present()
-
-
-def snippets_main_after_start(tb):
-    snipfcn_snippet_present(tb)
 
 
 class lineplot_demo(gr.top_block):
 
     def __init__(self):
         gr.top_block.__init__(self, "CyberEther Line Plot Demo", catch_exceptions=True)
-        self.flowgraph_started = threading.Event()
 
         ##################################################
         # Variables
@@ -47,7 +41,7 @@ class lineplot_demo(gr.top_block):
         # Blocks
         ##################################################
 
-        self.cyberether_cyber_lineplot_sink_0 = cyberether.cyber_lineplot_sink(256, "demo")
+        self.cyberether_cyber_lineplot_sink_0 = cyberether.cyber_lineplot_sink_c(256, "demo")
         self.blocks_throttle2_0 = blocks.throttle( gr.sizeof_gr_complex*1, samp_rate, True, 0 if "auto" == "auto" else max( int(float(0.1) * samp_rate) if "auto" == "time" else int(0.1), 1) )
         self.analog_sig_source_x_0 = analog.sig_source_c(samp_rate, analog.GR_COS_WAVE, 8000, 1, 0, 0)
 
@@ -73,6 +67,7 @@ class lineplot_demo(gr.top_block):
 def main(top_block_cls=lineplot_demo, options=None):
     tb = top_block_cls()
 
+
     def sig_handler(sig=None, frame=None):
         tb.stop()
         tb.wait()
@@ -82,15 +77,11 @@ def main(top_block_cls=lineplot_demo, options=None):
     signal.signal(signal.SIGINT, sig_handler)
     signal.signal(signal.SIGTERM, sig_handler)
 
-    tb.start()
-    tb.flowgraph_started.set()
-    snippets_main_after_start(tb)
-    try:
-        input('Press Enter to quit: ')
-    except EOFError:
-        pass
-    tb.stop()
-    tb.wait()
+    # cyberether.present(tb) starts the flowgraph, opens the CyberEther window
+    # on the main thread, blocks until the user closes it, then stops/waits the
+    # flowgraph. The window event loop owns the main thread for the duration.
+
+    cyberether.present(tb)
 
 
 if __name__ == '__main__':
