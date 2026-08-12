@@ -1,0 +1,151 @@
+options:
+  parameters:
+    alias: ''
+    author: ''
+    catch_exceptions: 'True'
+    comment: ''
+    copyright: ''
+    description: Minimal cyber_range showcase - drag the slider and watch the tone
+      sweep across the spectrum and waterfall.
+    device: Auto
+    gen_linking: dynamic
+    generate_options: cyberether_gui
+    generator_class_name: CyberetherStandaloneGuiGenerator
+    generator_module: gnuradio.cyberether.workflows.cyberether_standalone_gui
+    hier_block_src_path: '.:'
+    id: slider_demo
+    max_nouts: '0'
+    output_language: python
+    realtime_scheduling: ''
+    run: 'True'
+    run_command: '{python} -u {filename}'
+    thread_safe_setters: ''
+    title: Slider demo
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [8, 8]
+    rotation: 0
+    state: enabled
+
+blocks:
+- name: freq
+  id: cyberether_cyber_range
+  parameters:
+    alias: ''
+    comment: ''
+    gui_hint: ''
+    label: range
+    start: -100e3
+    stop: 100e3
+    value: 10e3
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [408, 88.0]
+    rotation: 0
+    state: enabled
+- name: samp_rate
+  id: variable
+  parameters:
+    comment: ''
+    value: '256000'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [200, 12]
+    rotation: 0
+    state: enabled
+- name: analog_sig_source_x_0
+  id: analog_sig_source_x
+  parameters:
+    affinity: ''
+    alias: ''
+    amp: '1'
+    comment: ''
+    freq: freq
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    offset: '0'
+    phase: '0'
+    samp_rate: samp_rate
+    showports: 'False'
+    type: complex
+    waveform: analog.GR_COS_WAVE
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [128, 284.0]
+    rotation: 0
+    state: enabled
+- name: blocks_throttle2_0
+  id: blocks_throttle2
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: ''
+    ignoretag: 'True'
+    limit: auto
+    maximum: '0.1'
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    samples_per_second: samp_rate
+    type: complex
+    vlen: '1'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [320, 304.0]
+    rotation: 0
+    state: enabled
+- name: cyberether_cyber_lineplot_sink_0
+  id: cyberether_cyber_lineplot_sink
+  parameters:
+    affinity: ''
+    alias: ''
+    buffer_size: '4096'
+    comment: ''
+    display: Frequency
+    gui_hint: '"0, 0"'
+    name: '"spectrum"'
+    type: complex
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [488, 252.0]
+    rotation: 0
+    state: enabled
+- name: cyberether_cyber_waterfall_sink_0
+  id: cyberether_cyber_waterfall_sink
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: ''
+    display: Frequency
+    fft_size: '1024'
+    gui_hint: '"1, 0"'
+    height: '256'
+    name: '"waterfall"'
+    type: complex
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [488, 400.0]
+    rotation: 0
+    state: enabled
+
+connections:
+- [analog_sig_source_x_0, '0', blocks_throttle2_0, '0']
+- [blocks_throttle2_0, '0', cyberether_cyber_lineplot_sink_0, '0']
+- [blocks_throttle2_0, '0', cyberether_cyber_waterfall_sink_0, '0']
+
+metadata:
+  file_format: 1
+  grc_version: v3.11.0.0git-1100-gf06564b3
