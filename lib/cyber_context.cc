@@ -8,6 +8,7 @@
 #include <gnuradio/cyberether/cyber_context.h>
 #include "mosaic_layout.h"
 #include <jetstream/logger.hh>
+#include <jetstream/render/tools/imgui.h>
 
 #include <algorithm>
 #include <atomic>
@@ -122,22 +123,19 @@ namespace gr {
       const unsigned total_cols = std::max<unsigned>(1, layout.cols);
 
       if (!interfaces.empty()) {
-          Result res = Superluminal::GlobalInterface([interfaces]() -> F32 {
-              const ImGuiViewport* viewport = ImGui::GetMainViewport();
-              ImVec2 window_pos(viewport->WorkPos.x + viewport->WorkSize.x * 0.5f, viewport->WorkPos.y);
-              ImVec2 window_pos_pivot(0.5f, 0.0f);
-              ImGui::SetNextWindowPos(window_pos, ImGuiCond_Always, window_pos_pivot);
-              ImGui::Begin("Controls", nullptr,
-                           ImGuiWindowFlags_AlwaysAutoResize |
-                           ImGuiWindowFlags_NoSavedSettings |
-                           ImGuiWindowFlags_NoMove |
-                           ImGuiWindowFlags_NoDecoration);
+          // Superluminal owns the window; the slider row styling is ours.
+          Result res = Superluminal::GlobalInterface([interfaces]{
+              const float margin = ImGui::GetContentRegionAvail().x * 0.1f;
+
+              ImGui::Indent(margin);
+              ImGui::PushItemWidth(-(margin + (ImGui::GetFontSize() * 12.0f)));
+
               for (const auto& cb : interfaces) {
                   cb();
               }
-              const F32 height = ImGui::GetWindowSize().y;
-              ImGui::End();
-              return height;
+
+              ImGui::PopItemWidth();
+              ImGui::Unindent(margin);
           });
           if (res != Result::SUCCESS) {
               JST_FATAL("[gr-cyberether] Superluminal::GlobalInterface failed for Controls.");
