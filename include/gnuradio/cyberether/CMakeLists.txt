@@ -14,4 +14,5 @@ install(FILES api.h
     cyber_context.h
     cyber_range.h
     cyber_waterfall_sink.h
+    cyber_spectrum_analyzer_sink.h
     cyber_constellation_sink.h DESTINATION include/gnuradio/cyberether)

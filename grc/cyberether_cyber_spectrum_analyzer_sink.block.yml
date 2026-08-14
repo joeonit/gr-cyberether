@@ -1,0 +1,73 @@
+id: cyberether_cyber_spectrum_analyzer_sink
+label: CyberEther Spectrum Analyzer Sink
+category: '[cyberether]'
+
+parameters:
+- id: name
+  label: Plot Name
+  dtype: string
+  default: '"spectrum analyzer"'
+
+- id: fft_size
+  label: FFT Size
+  dtype: int
+  default: '1024'
+
+- id: range_min
+  label: Range Min (dB)
+  dtype: float
+  default: '-100.0'
+
+- id: range_max
+  label: Range Max (dB)
+  dtype: float
+  default: '0.0'
+
+- id: averaging
+  label: Averaging
+  dtype: int
+  default: '1'
+
+- id: max_hold
+  label: Max Hold
+  dtype: bool
+  default: 'False'
+  options: ['True', 'False']
+  hide: part
+
+- id: waterfall_height
+  label: Waterfall Height
+  dtype: int
+  default: '512'
+  hide: part
+
+- id: gui_hint
+  label: GUI Hint
+  dtype: string
+  default: '""'
+  hide: part
+
+inputs:
+- label: in
+  domain: stream
+  dtype: complex
+
+templates:
+  imports: from gnuradio import cyberether
+  make: cyberether.cyber_spectrum_analyzer_sink_c(${fft_size}, ${name}, ${range_min},
+    ${range_max}, ${averaging}, ${max_hold}, ${waterfall_height}, ${gui_hint})
+
+documentation: |-
+  Spectrum analyzer: a spectrum line drawn above a scrolling waterfall of the
+  same signal, sharing one FFT. Complex input only; Superluminal runs the FFT,
+  the averaging, and the waterfall history internally.
+
+  Range Min / Range Max set the amplitude scale in dB. Averaging smooths the
+  trace over N frames. Max Hold keeps the peak value seen in each bin.
+  Waterfall Height is the number of rows of history.
+
+  GUI Hint places this plot in the shared CyberEther window grid, qtgui-style:
+  "row, col" or "row, col, row_span, col_span" (zero-based cells). Leave empty
+  to auto-place.
+
+file_format: 1
