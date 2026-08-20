@@ -15,7 +15,8 @@ Coming soon: constellation and spectrogram + a distribution channel for more sea
 ## Requirements
 
 - GNU Radio (mian or 3.10)
-- CyberEther ≥ 1.4.0 (has to be built from source for now)
+- CyberEther ≥ 1.7.0 (has to be built from source for now), tested against 1.9.1
+- Meson ≥ 1.11 to build CyberEther (Homebrew may still ship 1.10 — `brew upgrade meson`)
 - C++20
 - Platforms: macOS, linux , windows(still untested)
 
@@ -27,19 +28,20 @@ Coming soon: constellation and spectrogram + a distribution channel for more sea
 ```bash
 git clone https://github.com/luigifcruz/CyberEther
 cd CyberEther
+git checkout v1.9.1
 
 meson setup build \
-  --prefix="$HOME/.local/cyberether-1.4.0" \
+  --prefix="$HOME/.local/cyberether-1.9.1" \
   --buildtype release
 
 meson install -C build
 ```
 
-That gives you `$HOME/.local/cyberether-1.4.0/lib/pkgconfig/jetstream.pc`
+That gives you `$HOME/.local/cyberether-1.9.1/lib/pkgconfig/jetstream.pc`
 plus the headers and shared library.
 
 > If you're tracking CyberEther main instead of a tag, expect API breakage
-> until it stabilises. Pin to a tag (`git checkout v1.4.0`) for a known-good build.
+> until it stabilises. Pin to a tag (`git checkout v1.9.1`) for a known-good build.
 
 ### 2. Build gr-cyberether
 
@@ -51,7 +53,7 @@ git clone https://github.com/joeonit/gr-cyberether
 cd gr-cyberether
 mkdir build && cd build
 
-PKG_CONFIG_PATH=$HOME/.local/cyberether-1.4.0/lib/pkgconfig:$PKG_CONFIG_PATH \
+PKG_CONFIG_PATH=$HOME/.local/cyberether-1.9.1/lib/pkgconfig:$PKG_CONFIG_PATH \
 cmake .. \
   -DCMAKE_INSTALL_PREFIX=$GR_PREFIX \
   -DCMAKE_BUILD_TYPE=Release
