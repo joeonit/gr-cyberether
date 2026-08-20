@@ -1,0 +1,152 @@
+name: release (windows)
+
+# Windows is the one platform with no local machine to test on, so this is
+# runnable by hand (workflow_dispatch) as well as on a tag. A manual run
+# uploads the tarball as a build artifact instead of publishing a release.
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  CYBERETHER_REF: "v1.9.1"
+  # Pinned to match CyberEther's own Windows CI at v1.9.1.
+  VULKAN_VERSION: 1.4.309.0
+  VULKAN_SDK_SHA256: 48b132169b64fe65cdb0f20970195335a65354e73f1ea5373032c2a8bbad4297
+
+jobs:
+  release-windows:
+    name: gr-cyberether-windows-x86_64
+    runs-on: windows-2022
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup MSVC
+        uses: ilammy/msvc-dev-cmd@v1
+
+      # nasm + winflexbison3 + pkgconfiglite are what CyberEther's own Windows
+      # build needs; without them meson fails resolving its subprojects.
+      - name: Install system dependencies
+        shell: pwsh
+        run: choco install nasm winflexbison3 pkgconfiglite -y --no-progress
+
+      - name: Setup conda
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          miniforge-version: latest
+          channels: conda-forge
+          activate-environment: grcyberether
+
+      - name: Install dependencies
+        shell: bash -el {0}
+        run: |
+          conda install -y cmake ninja pkg-config gnuradio pybind11 boost-cpp
+          pip install "meson>=1.11" PyYAML numpy mapbox_earcut
+
+      - name: Cache CyberEther
+        id: ce-cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ github.workspace }}/.ce-prefix
+          key: cyberether-release-${{ env.CYBERETHER_REF }}-windows-v2
+
+      # CyberEther renders through Vulkan on Windows, so the SDK has to be
+      # present at build time. Mirrors CyberEther's own install step.
+      - name: Install Vulkan SDK
+        if: steps.ce-cache.outputs.cache-hit != 'true'
+        shell: pwsh
+        run: |
+          $installerPath = Join-Path $pwd 'vulkan-sdk.exe'
+          Invoke-WebRequest -Uri "https://sdk.lunarg.com/sdk/download/$env:VULKAN_VERSION/windows/vulkan-sdk.exe" -OutFile $installerPath
+
+          $sha = (Get-FileHash -Path $installerPath -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($sha -ne $env:VULKAN_SDK_SHA256) {
+            throw "Unexpected Vulkan SDK SHA256: $sha"
+          }
+
+          Start-Process -FilePath $installerPath -ArgumentList '--accept-licenses', '--default-answer', '--confirm-command', 'install' -Wait
+
+          $sdkRoot = "C:\VulkanSDK\$env:VULKAN_VERSION"
+          if (!(Test-Path $sdkRoot)) {
+            throw "Vulkan SDK was not installed to $sdkRoot"
+          }
+
+          "VULKAN_SDK=$sdkRoot" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "$sdkRoot\Bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+      - name: Build CyberEther
+        if: steps.ce-cache.outputs.cache-hit != 'true'
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $PSNativeCommandUseErrorActionPreference = $true
+
+          # Run under PowerShell so ilammy's MSVC link.exe takes priority
+          # over conda's Git-for-Windows link.exe
+          git clone --depth 1 --branch "$env:CYBERETHER_REF" `
+            https://github.com/luigifcruz/CyberEther.git ce-src
+          meson setup ce-src ce-build --vsenv `
+            --prefix="${{ github.workspace }}/.ce-prefix" `
+            -Dbuildtype=release `
+            -Ddefault_library=shared `
+            -Db_vscrt=static_from_buildtype `
+            -Dpython=false -Dtests=false -Dexamples=false `
+            -Dremote=disabled -Dinference=disabled
+          meson compile -C ce-build
+          meson install -C ce-build
+
+      - name: Locate jetstream.dll
+        shell: bash -el {0}
+        run: |
+          CE_PREFIX="${{ github.workspace }}/.ce-prefix"
+          DLL=$(find "$CE_PREFIX" -name "jetstream.dll" | head -1)
+          if [[ -z "$DLL" ]]; then
+            echo "jetstream.dll not found under $CE_PREFIX"; find "$CE_PREFIX" -name "*.dll" -o -name "*.lib" | head -20
+            exit 1
+          fi
+          echo "JETSTREAM_DLL=$DLL" >> "$GITHUB_ENV"
+          echo "found: $DLL"
+
+      - name: Build gr-cyberether
+        shell: bash -el {0}
+        run: |
+          CE_PREFIX="${{ github.workspace }}/.ce-prefix"
+          export PKG_CONFIG_PATH="${CE_PREFIX}/lib/pkgconfig:$PKG_CONFIG_PATH"
+          cmake -B build -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}/dist" \
+            -DENABLE_PYTHON=ON \
+            -DENABLE_DOXYGEN=OFF
+          cmake --build build
+          cmake --install build
+
+      - name: Bundle jetstream.dll
+        shell: bash -el {0}
+        run: |
+          mkdir -p "${{ github.workspace }}/dist/bin"
+          cp "$JETSTREAM_DLL" "${{ github.workspace }}/dist/bin/"
+
+      - name: Package
+        shell: bash -el {0}
+        run: tar -czf gr-cyberether-windows-x86_64.tar.gz -C ${{ github.workspace }}/dist .
+
+      # Manual runs: keep the tarball as an artifact so it can be inspected
+      # without publishing anything.
+      - name: Upload build artifact
+        if: github.event_name == 'workflow_dispatch'
+        uses: actions/upload-artifact@v4
+        with:
+          name: gr-cyberether-windows-x86_64
+          path: gr-cyberether-windows-x86_64.tar.gz
+
+      - name: Upload to GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: gr-cyberether-windows-x86_64.tar.gz
