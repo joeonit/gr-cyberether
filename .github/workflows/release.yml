@@ -10,7 +10,7 @@ permissions:
   contents: write
 
 env:
-  CYBERETHER_REF: "v1.4.0"
+  CYBERETHER_REF: "v1.9.1"
 
 jobs:
   release:

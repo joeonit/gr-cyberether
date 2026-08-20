@@ -48,9 +48,11 @@ find_package(Gnuradio "3.10" REQUIRED)
 find_package(Boost REQUIRED COMPONENTS unit_test_framework)
 
 # Find CyberEther (Jetstream)
-# Currently the build requires a minimum version of 1.4.0 during the development
+# 1.7.0 is the floor: it is the first release where Type::Scatter is actually
+# wired to a renderer, which the constellation sink needs. Earlier releases
+# declare the enum but cannot draw it.
 
-set(CYBERETHER_MIN_VERSION "1.4.0"
+set(CYBERETHER_MIN_VERSION "1.7.0"
     CACHE STRING "Minimum version required")
 
 find_package(PkgConfig REQUIRED)
