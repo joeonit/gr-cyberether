@@ -6,4 +6,5 @@ install(FILES
     all_options_demo.grc
     constellation_demo.grc
     all_constellations_demo.grc
+    slider_demo.grc
     DESTINATION share/gnuradio/examples/cyberether)

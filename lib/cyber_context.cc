@@ -8,6 +8,7 @@
 #include <gnuradio/cyberether/cyber_context.h>
 #include "mosaic_layout.h"
 #include <jetstream/logger.hh>
+#include <jetstream/render/tools/imgui.h>
 
 #include <algorithm>
 #include <atomic>
@@ -99,31 +100,60 @@ namespace gr {
           return;
       }
 
-      // Translate per-sink GUI hints into the shared grid. Hinted sinks get
-      // exactly the cells they asked for; the rest auto-fill (near-square
-      // when nothing is hinted). Bad hints degrade to auto placement with a
-      // warning, never to failure.
-      const std::size_t n = plots.size();
+      // Separate interfaces (sliders/controls) from actual plots.
+      std::vector<plot_request> actual_plots;
+      std::vector<std::function<void()>> interfaces;
       std::vector<std::string> hints;
-      hints.reserve(n);
       for (const auto& p : plots) {
-          hints.push_back(p.gui_hint);
+          if (p.interface) {
+              interfaces.push_back(p.interface);
+          } else {
+              actual_plots.push_back(p);
+              hints.push_back(p.gui_hint);
+          }
       }
+
       const layout_result layout = compute_layout(hints);
       for (const auto& warning : layout.warnings) {
           JST_WARN("[gr-cyberether] {}", warning);
       }
 
       std::unordered_set<std::string> used_names;
+      const unsigned total_rows = std::max<unsigned>(1, layout.rows);
+      const unsigned total_cols = std::max<unsigned>(1, layout.cols);
 
-      for (std::size_t i = 0; i < n; ++i) {
+      if (!interfaces.empty()) {
+          // Superluminal owns the window; the slider row styling is ours.
+          Result res = Superluminal::GlobalInterface([interfaces]{
+              const float margin = ImGui::GetContentRegionAvail().x * 0.1f;
+
+              ImGui::Indent(margin);
+              ImGui::PushItemWidth(-(margin + (ImGui::GetFontSize() * 12.0f)));
+
+              for (const auto& cb : interfaces) {
+                  cb();
+              }
+
+              ImGui::PopItemWidth();
+              ImGui::Unindent(margin);
+          });
+          if (res != Result::SUCCESS) {
+              JST_FATAL("[gr-cyberether] Superluminal::GlobalInterface failed for Controls.");
+              Superluminal::Terminate();
+              return;
+          }
+      }
+
+      const std::size_t num_plots = actual_plots.size();
+      for (std::size_t i = 0; i < num_plots; ++i) {
           const panel_rect& cell = layout.panels[i];
+
           const auto mosaic = Superluminal::MosaicLayout(
-              static_cast<U8>(layout.rows),   static_cast<U8>(layout.cols),
+              static_cast<U8>(total_rows),   static_cast<U8>(total_cols),
               static_cast<U8>(cell.row_span), static_cast<U8>(cell.col_span),
               static_cast<U8>(cell.col),      static_cast<U8>(cell.row));
 
-          std::string name = plots[i].name;
+          std::string name = actual_plots[i].name;
           if (!used_names.insert(name).second) {
               const std::string original = name;
               for (int k = 2; !used_names.insert(name = original + " (" + std::to_string(k) + ")").second; ++k) {
@@ -132,9 +162,7 @@ namespace gr {
                        "Give CyberEther sinks unique names.", original, name);
           }
 
-          const Result res = plots[i].interface
-              ? Superluminal::Interface(name, mosaic, plots[i].interface)
-              : Superluminal::Plot(name, mosaic, plots[i].config);
+          const Result res = Superluminal::Plot(name, mosaic, actual_plots[i].config);
           if (res != Result::SUCCESS) {
               JST_FATAL("[gr-cyberether] Superluminal::Plot failed for '{}'.", name);
               Superluminal::Terminate();
@@ -143,7 +171,7 @@ namespace gr {
       }
 
       JST_INFO("[gr-cyberether] Presenting {} plot(s) in a {}x{} grid.",
-               n, layout.rows, layout.cols);
+               num_plots, layout.rows, layout.cols);
 
       // Drive Superluminal::compute() at display cadence on a single background
       // thread, matching Superluminal::Show(). Sinks only write their tensors
