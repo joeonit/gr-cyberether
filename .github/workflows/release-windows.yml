@@ -129,7 +129,11 @@ jobs:
           # Hence: a single directory, forward slashes only.
           PC_DIR=$(dirname "$PC")
           PC_DIR="${PC_DIR//\\//}"
-          echo "PKG_CONFIG_PATH=$PC_DIR" >> "$GITHUB_ENV"
+          # Exported under our own name, not PKG_CONFIG_PATH: `conda activate`
+          # runs at the start of every `bash -el` step and overwrites
+          # PKG_CONFIG_PATH with the env's own, silently dropping anything set
+          # here via GITHUB_ENV. The build step re-exports it post-activation.
+          echo "JETSTREAM_PC_DIR=$PC_DIR" >> "$GITHUB_ENV"
           echo "found dll: $DLL"
           echo "found pc:  $PC"
           echo "pc dir:    $PC_DIR"
@@ -149,6 +153,10 @@ jobs:
       - name: Build gr-cyberether
         shell: bash -el {0}
         run: |
+          # Set after conda activation so it is not clobbered; ';' because
+          # pkgconf here is a native Windows build.
+          export PKG_CONFIG_PATH="${JETSTREAM_PC_DIR};${PKG_CONFIG_PATH:-}"
+          pkg-config --modversion jetstream
           cmake -B build -G Ninja \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}/dist" \
