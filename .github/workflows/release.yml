@@ -34,8 +34,12 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
             build-essential cmake pkg-config git ninja-build patchelf \
+            bison flex nasm \
             libboost-all-dev gnuradio-dev \
-            glslang-tools spirv-cross python3-pip
+            glslang-tools spirv-cross python3-pip \
+            libudev-dev libdrm-dev libglvnd-dev libvulkan-dev \
+            libwayland-dev wayland-protocols libxkbcommon-dev \
+            libx11-xcb-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev
           pip3 install --break-system-packages "meson>=1.11" PyYAML numpy mapbox_earcut
 
       - name: Install dependencies (macOS)
