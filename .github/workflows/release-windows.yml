@@ -58,8 +58,11 @@ jobs:
 
       # CyberEther renders through Vulkan on Windows, so the SDK has to be
       # present at build time. Mirrors CyberEther's own install step.
+      #
+      # Deliberately NOT gated on the CyberEther cache: jetstream's public
+      # headers include <vulkan/vulkan.h>, so gr-cyberether needs the SDK to
+      # compile even when libjetstream itself is restored from cache.
       - name: Install Vulkan SDK
-        if: steps.ce-cache.outputs.cache-hit != 'true'
         shell: pwsh
         run: |
           $installerPath = Join-Path $pwd 'vulkan-sdk.exe'
@@ -79,6 +82,12 @@ jobs:
 
           "VULKAN_SDK=$sdkRoot" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
           "$sdkRoot\Bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+          # VULKAN_SDK alone is not enough: MSVC resolves #include <vulkan/vulkan.h>
+          # off the INCLUDE variable, so the SDK's Include/Lib must be on it
+          # explicitly or the compile fails with C1083.
+          "INCLUDE=$sdkRoot\Include;$env:INCLUDE" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "LIB=$sdkRoot\Lib;$env:LIB" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
       - name: Build CyberEther
         if: steps.ce-cache.outputs.cache-hit != 'true'
