@@ -104,6 +104,11 @@ jobs:
             patchelf --set-rpath '$ORIGIN' "$DIST_LIB"/libgnuradio-cyberether.so
           fi
 
+      - name: Add installer
+        run: |
+          cp packaging/install.sh "${{ github.workspace }}/dist/install.sh"
+          chmod +x "${{ github.workspace }}/dist/install.sh"
+
       - name: Package
         run: tar -czf ${{ matrix.artifact }}.tar.gz -C ${{ github.workspace }}/dist .
 

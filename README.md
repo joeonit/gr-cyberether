@@ -21,6 +21,29 @@ Coming soon: constellation and spectrogram + a distribution channel for more sea
 - Platforms: macOS, linux , windows(still untested)
 
 
+## Install from a release
+
+Prebuilt tarballs for Linux x86_64 and macOS arm64 are attached to each
+[release](https://github.com/joeonit/gr-cyberether/releases). They bundle
+`libjetstream`, so they do **not** need a separate CyberEther install.
+
+```bash
+tar -xzf gr-cyberether-linux-x86_64.tar.gz
+cd gr-cyberether-linux-x86_64
+./install.sh
+```
+
+`install.sh` finds your GNU Radio prefix, checks that the bundled Python
+binding matches the Python your GNU Radio runs, installs, and verifies.
+`--dry-run`, `--prefix`, and `--uninstall` are supported.
+
+> **Python versions matter.** The tarball ships a compiled CPython extension,
+> which loads only on the version it was built for — 3.12 for the Linux
+> artifact (Ubuntu 24.04 apt GNU Radio), 3.14 for macOS (Homebrew GNU Radio).
+> If your GNU Radio uses a different Python (radioconda ships 3.12 on macOS),
+> `install.sh` will say so and you should build from source instead.
+
+
 ## Build from source
 
 ### 1. Build CyberEther into a prefix
