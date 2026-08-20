@@ -120,14 +120,31 @@ jobs:
             exit 1
           fi
           echo "JETSTREAM_DLL=$DLL" >> "$GITHUB_ENV"
-          # pkg-config here is a native Windows build, so it splits
-          # PKG_CONFIG_PATH on ';' — and every path contains a drive-letter
-          # ':'. Joining Unix-style with ':' makes the value unparseable, which
-          # is why 'No package jetstream found' despite the .pc being present.
-          # Set it to the single directory instead of appending.
-          echo "PKG_CONFIG_PATH=$(dirname "$PC")" >> "$GITHUB_ENV"
+
+          # pkgconf here is a native Windows build. Two traps:
+          #  - it splits PKG_CONFIG_PATH on ';', and every path holds a
+          #    drive-letter ':', so a Unix-style ':' join is unparseable
+          #  - it treats '\' as an escape character, and github.workspace
+          #    expands with backslashes, so the directory never resolves
+          # Hence: a single directory, forward slashes only.
+          PC_DIR=$(dirname "$PC")
+          PC_DIR="${PC_DIR//\\//}"
+          echo "PKG_CONFIG_PATH=$PC_DIR" >> "$GITHUB_ENV"
           echo "found dll: $DLL"
           echo "found pc:  $PC"
+          echo "pc dir:    $PC_DIR"
+
+          # Prove the lookup works here rather than discovering it inside CMake.
+          export PKG_CONFIG_PATH="$PC_DIR"
+          echo "--- which pkg-config ---"; which pkg-config || true
+          echo "--- default pc_path ---"; pkg-config --variable pc_path pkg-config || true
+          echo "--- modversion ---"
+          if ! pkg-config --modversion jetstream; then
+            echo "pkg-config still cannot see jetstream; contents of $PC_DIR:"
+            ls -la "$PC_DIR" || true
+            echo "--- jetstream.pc ---"; cat "$PC" || true
+            exit 1
+          fi
 
       - name: Build gr-cyberether
         shell: bash -el {0}
