@@ -1,13 +1,11 @@
 name: release (windows)
 
 # Windows is the one platform with no local machine to test on, so this is
-# runnable by hand (workflow_dispatch) as well as on a tag. A manual run
-# uploads the tarball as a build artifact instead of publishing a release.
+# driven by hand for now. Deliberately NOT wired to tag pushes yet: until a
+# manual run goes green end to end, a tag would attach a failed job to the
+# release. Add the `push: tags: v*` trigger back once it passes.
 
 on:
-  push:
-    tags:
-      - 'v*'
   workflow_dispatch:
 
 permissions:
@@ -110,23 +108,30 @@ jobs:
           meson compile -C ce-build
           meson install -C ce-build
 
-      - name: Locate jetstream.dll
+      - name: Locate CyberEther artifacts
         shell: bash -el {0}
         run: |
           CE_PREFIX="${{ github.workspace }}/.ce-prefix"
           DLL=$(find "$CE_PREFIX" -name "jetstream.dll" | head -1)
-          if [[ -z "$DLL" ]]; then
-            echo "jetstream.dll not found under $CE_PREFIX"; find "$CE_PREFIX" -name "*.dll" -o -name "*.lib" | head -20
+          PC=$(find "$CE_PREFIX" -name "jetstream.pc" | head -1)
+          if [[ -z "$DLL" || -z "$PC" ]]; then
+            echo "missing artifacts under $CE_PREFIX (dll='$DLL' pc='$PC')"
+            find "$CE_PREFIX" \( -name "*.dll" -o -name "*.lib" -o -name "*.pc" \) | head -30
             exit 1
           fi
           echo "JETSTREAM_DLL=$DLL" >> "$GITHUB_ENV"
-          echo "found: $DLL"
+          # pkg-config here is a native Windows build, so it splits
+          # PKG_CONFIG_PATH on ';' — and every path contains a drive-letter
+          # ':'. Joining Unix-style with ':' makes the value unparseable, which
+          # is why 'No package jetstream found' despite the .pc being present.
+          # Set it to the single directory instead of appending.
+          echo "PKG_CONFIG_PATH=$(dirname "$PC")" >> "$GITHUB_ENV"
+          echo "found dll: $DLL"
+          echo "found pc:  $PC"
 
       - name: Build gr-cyberether
         shell: bash -el {0}
         run: |
-          CE_PREFIX="${{ github.workspace }}/.ce-prefix"
-          export PKG_CONFIG_PATH="${CE_PREFIX}/lib/pkgconfig:$PKG_CONFIG_PATH"
           cmake -B build -G Ninja \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}/dist" \
