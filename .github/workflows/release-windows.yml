@@ -44,7 +44,9 @@ jobs:
       - name: Install dependencies
         shell: bash -el {0}
         run: |
-          conda install -y cmake ninja pkg-config gnuradio pybind11 boost-cpp
+          # GNU Radio 3.10 in conda-forge uses pybind11 internals ABI v5.
+          # Keep the OOT binding on the same pybind11 generation.
+          conda install -y cmake ninja pkg-config gnuradio "pybind11=2.13" boost-cpp
           pip install "meson>=1.11" PyYAML numpy mapbox_earcut
 
       - name: Cache CyberEther
@@ -52,7 +54,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ github.workspace }}/.ce-prefix
-          key: cyberether-release-${{ env.CYBERETHER_REF }}-windows-v2
+          key: cyberether-release-${{ env.CYBERETHER_REF }}-windows-v3-superluminal-export
 
       # CyberEther renders through Vulkan on Windows, so the SDK has to be
       # present at build time. Mirrors CyberEther's own install step.
@@ -98,6 +100,19 @@ jobs:
           # over conda's Git-for-Windows link.exe
           git clone --depth 1 --branch "$env:CYBERETHER_REF" `
             https://github.com/luigifcruz/CyberEther.git ce-src
+
+          # CyberEther v1.9.1 omits its DLL export annotation from the public
+          # Superluminal class. Patch only the CI checkout until that one-line
+          # fix is available in a tagged CyberEther release.
+          $header = Join-Path $pwd 'ce-src/include/jetstream/superluminal.hh'
+          $source = [IO.File]::ReadAllText($header)
+          if ($source.Contains('class Superluminal {')) {
+            $source = $source.Replace('class Superluminal {', 'class JETSTREAM_API Superluminal {')
+            [IO.File]::WriteAllText($header, $source, [Text.UTF8Encoding]::new($false))
+          } elseif (!$source.Contains('class JETSTREAM_API Superluminal {')) {
+            throw 'CyberEther Superluminal declaration changed; update the Windows export workaround.'
+          }
+
           meson setup ce-src ce-build --vsenv `
             --prefix="${{ github.workspace }}/.ce-prefix" `
             -Dbuildtype=release `
@@ -151,41 +166,93 @@ jobs:
           fi
 
       - name: Build gr-cyberether
-        shell: bash -el {0}
+        shell: pwsh
         run: |
-          # Set after conda activation so it is not clobbered; ';' because
-          # pkgconf here is a native Windows build.
-          export PKG_CONFIG_PATH="${JETSTREAM_PC_DIR};${PKG_CONFIG_PATH:-}"
+          $ErrorActionPreference = 'Stop'
+          $PSNativeCommandUseErrorActionPreference = $true
+
+          # pkgconf is a native Windows executable and uses ';' between paths.
+          $env:PKG_CONFIG_PATH = "$env:JETSTREAM_PC_DIR;$env:PKG_CONFIG_PATH"
           pkg-config --modversion jetstream
-          cmake -B build -G Ninja \
-            -DCMAKE_BUILD_TYPE=Release \
-            -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}/dist" \
-            -DENABLE_PYTHON=ON \
+
+          # The hand-written bindings are current, but two stored header MD5s
+          # predate their public-header changes. Refresh them in the runner so
+          # GNU Radio 3.10's configure-time consistency check can proceed.
+          $bindings = @(
+            @('cyber_lineplot_sink', 'cyber_lineplot_sink'),
+            @('cyber_waterfall_sink', 'cyber_waterfall_sink')
+          )
+          foreach ($pair in $bindings) {
+            $binding = Join-Path $pwd "python/cyberether/bindings/$($pair[0])_python.cc"
+            $header = Join-Path $pwd "include/gnuradio/cyberether/$($pair[1]).h"
+            $hash = (Get-FileHash -Path $header -Algorithm MD5).Hash.ToLowerInvariant()
+            $source = [IO.File]::ReadAllText($binding)
+            $updated = [regex]::Replace(
+              $source,
+              '(BINDTOOL_HEADER_FILE_HASH\()[0-9a-fA-F]+(\))',
+              "`${1}$hash`${2}",
+              1)
+            if ($updated -eq $source) {
+              throw "Could not update the binding hash in $binding"
+            }
+            [IO.File]::WriteAllText($binding, $updated, [Text.UTF8Encoding]::new($false))
+          }
+
+          cmake -B build -G Ninja `
+            -DCMAKE_BUILD_TYPE=Release `
+            -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}/dist" `
+            -DCMAKE_PREFIX_PATH="$env:CONDA_PREFIX/Library" `
+            -DCMAKE_CXX_FLAGS="/Zc:preprocessor /DNOGDI /DBOOST_ALL_NO_LIB" `
+            -DGR_PYTHON_DIR="Lib/site-packages" `
+            -DPython_EXECUTABLE="$env:CONDA_PREFIX/python.exe" `
+            -DENABLE_PYTHON=ON `
             -DENABLE_DOXYGEN=OFF
           cmake --build build
           cmake --install build
 
       - name: Bundle jetstream.dll
-        shell: bash -el {0}
+        shell: pwsh
         run: |
-          mkdir -p "${{ github.workspace }}/dist/bin"
-          cp "$JETSTREAM_DLL" "${{ github.workspace }}/dist/bin/"
+          New-Item -ItemType Directory -Path '${{ github.workspace }}/dist/bin' -Force | Out-Null
+          Copy-Item -LiteralPath $env:JETSTREAM_DLL -Destination '${{ github.workspace }}/dist/bin/jetstream.dll'
+
+      - name: Smoke test staged package
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $PSNativeCommandUseErrorActionPreference = $true
+
+          $pyd = Get-ChildItem -Path '${{ github.workspace }}/dist' `
+            -Filter 'cyberether_python*.pyd' -File -Recurse | Select-Object -First 1
+          if (!$pyd) {
+            throw 'The staged package does not contain cyberether_python*.pyd'
+          }
+
+          $sitePackages = Split-Path (Split-Path $pyd.DirectoryName -Parent) -Parent
+          $env:PYTHONPATH = "$sitePackages;$env:PYTHONPATH"
+          $env:CYBERETHER_DIST_BIN = '${{ github.workspace }}/dist/bin'
+          $env:PATH = "$env:CYBERETHER_DIST_BIN;$env:CONDA_PREFIX/Library/bin;$env:PATH"
+
+          # Python 3.8+ does not use PATH for dependent DLL resolution. Import
+          # the native module directly so a loader error cannot be hidden by
+          # the package's optional-extension fallback.
+          & "$env:CONDA_PREFIX/python.exe" -c "import importlib, os; dll_dir = os.add_dll_directory(os.environ['CYBERETHER_DIST_BIN']); native = importlib.import_module('gnuradio.cyberether.cyberether_python'); b = native.cyber_lineplot_sink_c(128, 'ci'); assert b.to_basic_block(); print('Windows package import: OK')"
 
       - name: Package
-        shell: bash -el {0}
-        run: tar -czf gr-cyberether-windows-x86_64.tar.gz -C ${{ github.workspace }}/dist .
+        shell: pwsh
+        run: Compress-Archive -Path '${{ github.workspace }}/dist/*' -DestinationPath gr-cyberether-windows-x86_64.zip
 
-      # Manual runs: keep the tarball as an artifact so it can be inspected
+      # Manual runs: keep the ZIP as an artifact so it can be inspected
       # without publishing anything.
       - name: Upload build artifact
         if: github.event_name == 'workflow_dispatch'
         uses: actions/upload-artifact@v4
         with:
           name: gr-cyberether-windows-x86_64
-          path: gr-cyberether-windows-x86_64.tar.gz
+          path: gr-cyberether-windows-x86_64.zip
 
       - name: Upload to GitHub Release
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
-          files: gr-cyberether-windows-x86_64.tar.gz
+          files: gr-cyberether-windows-x86_64.zip
