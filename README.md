@@ -3,9 +3,12 @@
 A GNU Radio OOT module to bring [CyberEther](https://github.com/luigifcruz/CyberEther) GPU-accelerated visualization sinks.
 Built during **Google Summer of Code 2026** with GNU Radio.
 
-<video src="https://github.com/joeonit/gr-cyberether/releases/download/v0.9.1/qpsk-receiver-demo.mp4" controls muted loop></video>
 
-<video src="https://github.com/joeonit/gr-cyberether/releases/download/v0.9.1/fm-receiver-demo.mp4" controls muted loop></video>
+https://github.com/user-attachments/assets/5b59230c-6c3f-447a-a3ee-516d6cf90a9c
+
+
+
+https://github.com/user-attachments/assets/2e4cec69-c0a4-444d-8c8e-c43507c1132e
 
 ---
 
