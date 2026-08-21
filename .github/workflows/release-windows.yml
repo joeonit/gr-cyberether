@@ -230,9 +230,13 @@ jobs:
 
           $sitePackages = Split-Path (Split-Path $pyd.DirectoryName -Parent) -Parent
           $env:PYTHONPATH = "$sitePackages;$env:PYTHONPATH"
-          $env:PATH = "${{ github.workspace }}/dist/bin;$env:CONDA_PREFIX/Library/bin;$env:PATH"
+          $env:CYBERETHER_DIST_BIN = '${{ github.workspace }}/dist/bin'
+          $env:PATH = "$env:CYBERETHER_DIST_BIN;$env:CONDA_PREFIX/Library/bin;$env:PATH"
 
-          & "$env:CONDA_PREFIX/python.exe" -c "from gnuradio import cyberether; b = cyberether.cyber_lineplot_sink_c(128, 'ci'); assert b.to_basic_block(); print('Windows package import: OK')"
+          # Python 3.8+ does not use PATH for dependent DLL resolution. Import
+          # the native module directly so a loader error cannot be hidden by
+          # the package's optional-extension fallback.
+          & "$env:CONDA_PREFIX/python.exe" -c "import importlib, os; dll_dir = os.add_dll_directory(os.environ['CYBERETHER_DIST_BIN']); native = importlib.import_module('gnuradio.cyberether.cyberether_python'); b = native.cyber_lineplot_sink_c(128, 'ci'); assert b.to_basic_block(); print('Windows package import: OK')"
 
       - name: Package
         shell: pwsh
