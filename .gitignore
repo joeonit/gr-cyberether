@@ -11,3 +11,6 @@ __pycache__/
 *.swo
 *.o
 imgui.ini
+
+# GRC writes a generated .py next to each .grc when a flowgraph is run.
+examples/*.py

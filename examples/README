@@ -1,3 +1,55 @@
-It is considered good practice to add examples in here to demonstrate the
-functionality of your OOT module. Python scripts, GRC flow graphs or other
-code can go here.
+gr-cyberether examples
+======================
+
+Open these in GNU Radio Companion. Every one of them needs the Options block's
+"Generate Options" set to `cyberether_gui` — that is what lets CyberEther own
+the main thread and open its window when you press Run. It is already set in
+each file here.
+
+Start with lineplot_demo.grc, then everything_demo.grc.
+
+  lineplot_demo.grc
+      The smallest useful flowgraph: a cosine into one line plot sink.
+      Start here.
+
+  waterfall_demo.grc
+      One waterfall sink, with FFT size and history height exposed.
+
+  constellation_demo.grc
+      QPSK symbols with noise into the constellation sink.
+
+  all_constellations_demo.grc
+      BPSK, QPSK, 8-PSK and 16-QAM side by side in one window. Shows how
+      several sinks share a mosaic.
+
+  lineplot_types_and_device_demo.grc
+      The same signal into a complex sink and a float sink, and how to pick
+      the renderer device (Auto / CPU / CUDA / Metal / Vulkan / WebGPU).
+
+  all_options_demo.grc
+      Four plots with every block parameter set explicitly. Useful as a
+      reference for what each knob does.
+
+  everything_demo.grc
+      The showcase: all three sink types, complex and float input, row and
+      column spanning across a 3x3 mosaic, and two live sliders driving the
+      flowgraph from inside the render window.
+
+
+Layout
+------
+
+Sinks take a GUI Hint using the same syntax as the qtgui blocks:
+
+    "row, col"                        one cell
+    "row, col, row_span, col_span"    a rectangular block of cells
+
+Sinks with no hint are placed automatically, and a malformed hint falls back
+to auto-placement rather than failing the flowgraph.
+
+
+A note on .py files
+-------------------
+
+Running a flowgraph in GRC writes a generated .py next to the .grc. Those are
+build output, not source, and are gitignored — edit the .grc, never the .py.
