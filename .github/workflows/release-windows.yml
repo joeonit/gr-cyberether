@@ -12,8 +12,8 @@ permissions:
   contents: write
 
 env:
-  CYBERETHER_REF: "v1.9.1"
-  # Pinned to match CyberEther's own Windows CI at v1.9.1.
+  CYBERETHER_REF: "v1.11.0"
+  # Pinned to match CyberEther's own Windows CI at v1.11.0 (unchanged since v1.9.1).
   VULKAN_VERSION: 1.4.309.0
   VULKAN_SDK_SHA256: 48b132169b64fe65cdb0f20970195335a65354e73f1ea5373032c2a8bbad4297
 

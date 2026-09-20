@@ -19,8 +19,9 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  # enforced by CYBERETHER_MIN_VERSION in CMakeLists.txt
-  CYBERETHER_REF: "v1.9.1"
+  # The version CI builds against. The floor CMake actually enforces is
+  # CYBERETHER_MIN_VERSION (1.10.0); this is the newest release we test on.
+  CYBERETHER_REF: "v1.11.0"
 
 jobs:
   cyberether:
