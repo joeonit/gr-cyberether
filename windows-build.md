@@ -32,7 +32,7 @@ conda install -y -c conda-forge cmake ninja pkg-config gnuradio boost-cpp "pybin
 python -m pip install "meson>=1.11" PyYAML numpy mapbox_earcut
 ```
 
-Install the Vulkan SDK, then build CyberEther 1.9.1 into a separate prefix.
+Install the Vulkan SDK, then build CyberEther 1.11.0 into a separate prefix.
 Until CyberEther tags a release that exports its public `Superluminal` API,
 the one-line replacement below is required for external Windows consumers.
 
@@ -40,7 +40,7 @@ the one-line replacement below is required for external Windows consumers.
 $work = (Resolve-Path .).Path
 $cePrefix = "$work\cyberether-prefix"
 
-git clone --depth 1 --branch v1.9.1 https://github.com/luigifcruz/CyberEther.git
+git clone --depth 1 --branch v1.11.0 https://github.com/luigifcruz/CyberEther.git
 $header = "$work\CyberEther\include\jetstream\superluminal.hh"
 $source = [IO.File]::ReadAllText($header)
 $source = $source.Replace('class Superluminal {', 'class JETSTREAM_API Superluminal {')

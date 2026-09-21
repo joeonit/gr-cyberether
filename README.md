@@ -19,18 +19,15 @@ https://github.com/user-attachments/assets/2e4cec69-c0a4-444d-8c8e-c43507c1132e
 | `cyber_lineplot_sink`            | complex or float | line plot, time or frequency domain                        |
 | `cyber_waterfall_sink`           | complex or float | scrolling waterfall                                        |
 | `cyber_constellation_sink`       | complex          | IQ scatter plot                                            |
-| `cyber_spectrum_analyzer_sink` † | complex          | spectrum line above a waterfall, sharing one FFT           |
+| `cyber_spectrum_analyzer_sink`   | complex          | spectrum line above a waterfall, sharing one FFT           |
 | `cyber_range`                    | —                | a slider in the control panel, driving a GRC variable live |
-
-> † **Awaiting upstream merge.** The spectrum analyzer sink, and drawing
-> `cyber_range` sliders both depend on CyberEther changes that are written and under review and probably would be available with CyberEther V 2.0.0
 
 ---
 
 ## Requirements
 
 - GNU Radio 3.10 or main
-- CyberEther >= 1.7.0 (tested against 1.9.1)
+- CyberEther >= 1.10.0 (tested against 1.11.0)
 - Meson >= 1.11 to build CyberEther
 - C++20
 - Linux, macOS and Windows.
@@ -48,9 +45,9 @@ The Python bindings are compiled against *your* GNU Radio and *your* Python.
 ```bash
 git clone https://github.com/luigifcruz/CyberEther
 cd CyberEther
-git checkout v1.9.1
+git checkout v1.11.0
 
-meson setup build --prefix="$HOME/.local/cyberether-1.9.1" --buildtype release
+meson setup build --prefix="$HOME/.local/cyberether-1.11.0" --buildtype release
 meson install -C build
 ```
 
@@ -60,7 +57,7 @@ meson install -C build
 git clone https://github.com/joeonit/gr-cyberether
 cd gr-cyberether
 
-PKG_CONFIG_PATH=$HOME/.local/cyberether-1.9.1/lib/pkgconfig:$PKG_CONFIG_PATH \
+PKG_CONFIG_PATH=$HOME/.local/cyberether-1.11.0/lib/pkgconfig:$PKG_CONFIG_PATH \
 cmake -B build -DCMAKE_INSTALL_PREFIX="$(gnuradio-config-info --prefix)"
 
 cmake --build build -j

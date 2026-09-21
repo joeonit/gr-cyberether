@@ -48,11 +48,16 @@ find_package(Gnuradio "3.10" REQUIRED)
 find_package(Boost REQUIRED COMPONENTS unit_test_framework)
 
 # Find CyberEther (Jetstream)
-# 1.7.0 is the floor: it is the first release where Type::Scatter is actually
-# wired to a renderer, which the constellation sink needs. Earlier releases
-# declare the enum but cannot draw it.
+# 1.10.0 is the floor. Each sink pins it a little higher, and this is the
+# highest of them:
+#   1.7.0  Type::Scatter is first wired to a renderer (constellation sink).
+#          Earlier releases declare the enum but cannot draw it.
+#   1.9.2  Superluminal::GlobalInterface lands, so cyber_range can draw its
+#          sliders above the mosaic instead of inside a cell.
+#   1.10.0 Type::SpectrumAnalyzer lands (spectrum analyzer sink).
+# Tested against 1.11.0.
 
-set(CYBERETHER_MIN_VERSION "1.7.0"
+set(CYBERETHER_MIN_VERSION "1.10.0"
     CACHE STRING "Minimum version required")
 
 find_package(PkgConfig REQUIRED)
