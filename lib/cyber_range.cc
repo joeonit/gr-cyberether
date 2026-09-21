@@ -23,9 +23,9 @@ namespace gr {
       const std::string d_label;
       const float       d_min;
       const float       d_max;
-      float             d_slider;   // bound to the ImGui slider; present thread only
+      float             d_slider;
       float             d_last;
-      std::atomic<float> d_value;   // last applied value, for readers
+      std::atomic<float> d_value;
       std::function<void(float)> d_callback;
       std::mutex        d_mutex;
 
