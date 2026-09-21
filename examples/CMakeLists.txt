@@ -7,5 +7,6 @@ install(FILES
     all_options_demo.grc
     everything_demo.grc
     slider_demo.grc
+    spectrum_analyzer_demo.grc
     README
     DESTINATION share/gnuradio/examples/cyberether)

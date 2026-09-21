@@ -29,6 +29,7 @@ list(APPEND cyberether_python_files
     cyber_context_python.cc
     cyber_range_python.cc
     cyber_waterfall_sink_python.cc
+    cyber_spectrum_analyzer_sink_python.cc
     cyber_constellation_sink_python.cc python_bindings.cc)
 
 gr_pybind_make_oot(cyberether ../../.. gr::cyberether "${cyberether_python_files}")
