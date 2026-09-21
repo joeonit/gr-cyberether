@@ -11,4 +11,5 @@ install(FILES
     cyberether_standalone_gui.workflow.yml
     cyberether_cyber_range.block.yml
     cyberether_cyber_waterfall_sink.block.yml
+    cyberether_cyber_spectrum_analyzer_sink.block.yml
     cyberether_cyber_constellation_sink.block.yml DESTINATION share/gnuradio/grc/blocks)
